@@ -1,0 +1,10 @@
+# Cài PyTorch TRƯỚC theo hướng dẫn trong README (bản GPU hoặc CPU), rồi mới chạy:
+#   pip install -r requirements.txt
+ultralytics==8.4.163      # giữ đúng phiên bản: file yoloe_plate.pt được lưu bằng bản này
+opencv-python>=4.9
+numpy>=1.26
+pandas>=2.0
+pillow>=10.0
+matplotlib>=3.8
+# chỉ cần khi chạy với --depth (Depth-Anything-V2):
+transformers==5.22.2

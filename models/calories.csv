@@ -1,0 +1,46 @@
+id,class,name_vi,kcal_per_100g,source,note
+0,rice,cơm trắng,130.0,Nutrition5k ingredients_metadata (USDA FNDDS),
+1,fried_tofu,đậu phụ rán,73.0,Nutrition5k ingredients_metadata (USDA FNDDS),đậu chưa rán
+2,betel_leaf_pork,chả lá lốt,286.0,Nutrition5k ingredients_metadata (USDA FNDDS),thịt viên
+3,bean_sprouts_bamboo,giá xào măng,30.0,Nutrition5k ingredients_metadata (USDA FNDDS),
+4,minced_pork_corn,thịt băm xào ngô,115.0,https://mytour.vn/vi/blog/bai-viet/5-mon-ngon-tu-thit-bam-khien-ban-an-tro-nen-soi-dong.html,"công thức không ghi lượng dầu -> chưa tính dầu, thấp hơn thực tế"
+5,bell_pepper_chicken,gà xào ớt chuông,165.0,Nutrition5k ingredients_metadata (USDA FNDDS),chỉ phần gà
+6,rolled_omelette,trứng cuộn,154.0,Nutrition5k ingredients_metadata (USDA FNDDS),
+7,pumpkin,bí đỏ,25.9,Nutrition5k ingredients_metadata (USDA FNDDS),
+8,boiled_egg,trứng luộc,155.5,Nutrition5k ingredients_metadata (USDA FNDDS),
+9,drink,đồ uống,,,không tính calo đồ uống (nhóm quyết định 09/11)
+10,coconut_braised_pork,thịt kho (nước dừa),238.0,Nutrition5k ingredients_metadata (USDA FNDDS),"chưa tính đường, nước kho"
+11,chinese_sausage,lạp xưởng,344.6,Nutrition5k ingredients_metadata (USDA FNDDS),xúc xích kiểu Mỹ
+12,fried_chicken,gà rán,246.1,Nutrition5k ingredients_metadata (USDA FNDDS),
+13,leafy_greens,rau xanh,28.0,Nutrition5k ingredients_metadata (USDA FNDDS),
+14,pork_broccoli,thịt xào súp lơ,35.0,Nutrition5k ingredients_metadata (USDA FNDDS),chỉ phần súp lơ
+15,cutlet,thịt lợn chiên,230.8,Nutrition5k ingredients_metadata (USDA FNDDS),
+16,chayote,su su,24.0,Nutrition5k ingredients_metadata (USDA FNDDS),
+17,pork_floss,ruốc / chà bông,369.0,https://nhathuoclongchau.com.vn/bai-viet/cha-bong-bao-nhieu-calo-an-nhu-the-nao-de-khong-lo-tang-can.html,
+18,quail_egg,trứng cút,155.5,Nutrition5k ingredients_metadata (USDA FNDDS),trứng gà
+19,egg_meatloaf,chả trứng,212.0,https://quantrimang.com/cuoc-song/cach-lam-cha-trung-hap-cuc-ngon-ma-de-lam-183312,"mộc nhĩ, miến tính theo khối lượng khô; chỉ tính trứng + thịt thì ra 203"
+20,sausage,xúc xích,344.6,Nutrition5k ingredients_metadata (USDA FNDDS),
+21,potato,khoai tây,77.0,Nutrition5k ingredients_metadata (USDA FNDDS),luộc; xào/chiên sẽ cao hơn
+22,soup,canh,35.5,Nutrition5k ingredients_metadata (USDA FNDDS),dao động lớn theo loại canh
+23,boiled_pork,thịt luộc,238.0,Nutrition5k ingredients_metadata (USDA FNDDS),
+24,radish,củ cải,16.0,Nutrition5k ingredients_metadata (USDA FNDDS),
+25,braised_egg,trứng kho,155.5,Nutrition5k ingredients_metadata (USDA FNDDS),chưa tính nước kho
+26,water_spinach,rau muống,23.0,Nutrition5k ingredients_metadata (USDA FNDDS),rau khác loài
+27,braised_fish,cá kho,90.0,Nutrition5k ingredients_metadata (USDA FNDDS),"chưa tính đường, dầu"
+28,pork_roll,giò lụa,145.0,Nutrition5k ingredients_metadata (USDA FNDDS),
+29,shrimp_spring_roll,nem / chả giò tôm,154.3,Nutrition5k ingredients_metadata (USDA FNDDS),
+30,fried_egg,trứng rán,196.0,Nutrition5k ingredients_metadata (USDA FNDDS),
+31,sweet_sour_chicken,gà sốt chua ngọt,250.0,https://foodstruct.com/food/restaurant-chinese-sweetandsourchicken,gà chua ngọt nhà hàng Trung Quốc (USDA); bản siêu thị Anh 124
+32,dog_meat_rua_man,rựa mận / giả cầy,193.1,https://hoanghamobile.com/tin-tuc/?p=469545,"coi như giữ hết dầu, không bay hơi; giò heo tính cả xương"
+33,pork_with_tofu,đậu sốt thịt,153.7,https://www.dienmayxanh.com/vao-bep/cach-lam-dau-hu-sot-thit-bam-thom-ngon-dam-da-hap-dan-dua-com-10049,"công thức dùng đậu non; căng tin dùng đậu RÁN -> thay đậu rán (270, fdc 172451) thì ra ~258"
+34,silkworm_pupae,nhộng,206.0,https://tienphong.vn/cong-dung-va-tac-hai-cua-nhong-tam-ban-can-biet-de-tranh-post803987.tpo,
+35,stir_fried_vegetables,rau xào thập cẩm,32.0,Nutrition5k ingredients_metadata (USDA FNDDS),chưa tính dầu
+36,fried_anchovy,cá cơm rim,210.0,Nutrition5k ingredients_metadata (USDA FNDDS),
+37,peanuts,lạc,567.5,Nutrition5k ingredients_metadata (USDA FNDDS),
+38,fried_shrimp,tôm chiên,99.0,Nutrition5k ingredients_metadata (USDA FNDDS),tôm chưa chiên
+39,bean_sprouts_green_beans,giá xào đậu que,31.0,Nutrition5k ingredients_metadata (USDA FNDDS),
+40,cabbage,bắp cải luộc,21.0,Nutrition5k ingredients_metadata (USDA FNDDS),
+41,fried_pork_skin,bì lợn chiên,544.0,"USDA FoodData Central fdcId 167961 (Snacks, pork skins, plain)","bì chiên giòn dạng snack (rất khô); miếng ở căng tin dày, còn nước -> thực tế có thể thấp hơn"
+42,fish_ball,cá viên,140.0,https://nhathuoclongchau.com.vn/bai-viet/100g-ca-vien-chien-bao-nhieu-calo-71051.html,chiên; luộc 123
+43,stir_fried_gizzard,mề xào,135.0,https://nhathuoclongchau.com.vn/bai-viet/me-ga-bao-nhieu-calo-an-me-ga-co-tang-can-khong.html,"bài ghi 120-150, lấy giữa khoảng; mề sống 94"
+44,roasted_cinnamon_pork,chả quế,235.0,https://nhathuoclongchau.com.vn/bai-viet/cha-que-bao-nhieu-calo-mot-so-goi-y-han-che-tang-can-khi-an-cha-que.html,nguồn khác ghi 386 cho chả quế chiên (mytour.vn)

@@ -1,0 +1,21 @@
+# môi trường Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# kết quả chạy thử
+outputs/
+runs/
+
+# model tải về / file lớn không đưa lên git
+*.ts
+mobileclip*
+yolo26*.pt
+yoloe-11*.pt
+
+# IDE / hệ điều hành
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

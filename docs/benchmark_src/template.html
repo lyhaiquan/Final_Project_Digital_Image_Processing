@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8">
+<title>Benchmark khay cơm</title>
+<style>
+@page { size: A4; margin: 19mm 14.3mm 25mm 14.3mm; }
+* { box-sizing: border-box; }
+html, body { background: #fff; color: #000; margin: 0; }
+body { font: 10pt/1.18 "Times New Roman", Times, serif; text-align: justify; hyphens: auto; }
+h1.title { font-size: 22pt; font-weight: normal; text-align: center; line-height: 1.15; margin: 0 0 10pt; }
+.authors { text-align: center; font-size: 11pt; margin-bottom: 14pt; }
+.authors .aff { font-size: 10pt; font-style: italic; }
+.cols { column-count: 2; column-gap: 4.2mm; }
+.abstract, .kw { font-size: 9pt; font-weight: bold; margin: 0 0 6pt; }
+.abstract i, .kw i { font-weight: bold; }
+p { margin: 0; text-indent: 1em; }
+p.ni { text-indent: 0; }
+h2 { font-size: 10pt; font-weight: normal; font-variant: small-caps; text-align: center; margin: 9pt 0 4pt; letter-spacing: .02em; break-after: avoid; }
+h3 { font-size: 10pt; font-weight: normal; font-style: italic; margin: 5pt 0 2pt; break-after: avoid; }
+.tab { break-inside: avoid; margin: 7pt 0 8pt; }
+.tab.wide { column-span: all; }
+.cap { font-size: 8pt; text-align: center; font-variant: small-caps; margin-bottom: 3pt; line-height: 1.25; }
+.cap .no { display: block; }
+table { border-collapse: collapse; width: 100%; font-size: 7.6pt; line-height: 1.2; }
+th, td { padding: 1.1pt 2pt; text-align: center; white-space: nowrap; }
+td:first-child, td:last-child { white-space: normal; }
+.sd { font-size: 82%; }
+td:first-child, th:first-child { text-align: left; }
+thead tr:first-child th { border-top: 1pt solid #000; }
+thead tr:last-child th { border-bottom: .6pt solid #000; }
+tbody tr:last-child td { border-bottom: 1pt solid #000; }
+tr.grp td { font-style: italic; border-top: .4pt solid #000; padding-top: 2pt; }
+tr.b td { font-weight: bold; border-top: .4pt solid #000; }
+.tn { font-size: 7.4pt; text-align: left; margin-top: 2pt; line-height: 1.2; }
+figure { margin: 6pt 0; break-inside: avoid; }
+figure img { width: 100%; display: block; max-height: 52mm; object-fit: cover; }
+figcaption { font-size: 8pt; margin-top: 3pt; text-align: justify; }
+ul.c { margin: 2pt 0 2pt 1.1em; padding: 0; }
+ul.c li { margin: 0 0 1pt; }
+.ref { font-size: 8pt; line-height: 1.22; }
+.ref p { text-indent: -1.9em; padding-left: 1.9em; margin-bottom: 1.5pt; }
+.eq { text-align: center; margin: 3pt 0; font-style: italic; }
+</style></head><body>
+
+<h1 class="title">Benchmark phân đoạn món ăn và ước lượng khối lượng<br>trên ảnh khay cơm căng tin</h1>
+<div class="authors">[Tên thành viên 1], [Tên thành viên 2], [Tên thành viên 3]<br>
+<span class="aff">[Khoa / Trường] — Báo cáo kỹ thuật, 11/2026</span></div>
+
+<div class="cols">
+<p class="abstract"><i>Tóm tắt</i>—Báo cáo trình bày giao thức đánh giá và kết quả tinh chỉnh YOLO26s-seg cho bài toán phân đoạn món ăn trên khay cơm căng tin Việt Nam ([[n_cls]] lớp, [[n_img]] ảnh), kèm bước ước lượng khối lượng (gram) từ mask. Tập test được khóa từ đầu và chia theo nhóm buổi chụp để tránh rò rỉ; mỗi cấu hình được huấn luyện với 3 seed. Model cuối đạt mask mAP<sub>50-95</sub> [[full]] trên test và nhận đúng [[conf_ok]]/[[conf_n]] vùng nhãn. Về khối lượng, chuẩn hóa diện tích theo đĩa (YOLOE) giảm MAE các món khác cơm từ [[nr0|.1f]] g xuống [[nr1|.1f]] g; với cơm, thể tích tương đối từ Depth-Anything-V2 có tương quan dương với gram (Spearman +[[spV|.2f]]) trong khi diện tích tương quan âm, giảm MAE tổng khay trên test từ [[k1|.0f]] g xuống [[k2|.0f]] g.</p>
+<p class="kw"><i>Từ khóa</i>—phân đoạn thực thể, nhận diện món ăn, ước lượng khối lượng, ước lượng độ sâu đơn ảnh, YOLO.</p>
+
+<h2>I. Giới thiệu</h2>
+<p>Mục tiêu của nhóm là tinh chỉnh mô hình có sẵn và đánh giá nghiêm ngặt trên dữ liệu tự thu thập, không đề xuất kiến trúc mới. Các bộ dữ liệu khay ăn công khai như UNIMIB2016 [4] không có khối lượng từng món; Nutrition5k [5] có khối lượng nhưng ở mức cả đĩa và dùng camera độ sâu. Bộ dữ liệu của nhóm có cân từng món trên khay và chỉ dùng ảnh điện thoại. Báo cáo tập trung vào <i>cách</i> xây benchmark sao cho con số đáng tin, rồi mới đến kết quả.</p>
+
+<h2>II. Dữ liệu và giao thức đánh giá</h2>
+<h3>A. Dữ liệu</h3>
+<p class="ni">Ảnh chụp khay cơm tại căng tin, gán nhãn đa giác theo món. Một khay được chụp khoảng 3 góc; [[n_pairs]] cặp (ảnh, món) có khối lượng cân thực tế, thuộc [[n_trays]] khay khác nhau. Gram cơm được suy ra bằng phép trừ (cả đĩa − đĩa rỗng − các món khác) nên chứa nhiễu. Sau khi rà lỗi (v3 → v4), hai cặp lớp trùng nghĩa được gộp và nhãn “gà rán” ở 6 ảnh được sửa thành “gà chua ngọt”.</p>
+
+<div class="tab"><div class="cap"><span class="no">Bảng I</span>Thống kê dữ liệu (bộ nhãn v4)</div>[[T1]]
+<div class="tn">Nhóm buổi chụp: các ảnh cùng khay hoặc cùng bộ món + gram, gom bằng union-find.</div></div>
+
+<h3>B. Chia tập chống rò rỉ</h3>
+<p class="ni">Chia theo <i>nhóm buổi chụp</i>, không theo từng ảnh: nếu ba góc của cùng một khay rơi vào cả train và test, mô hình được đánh giá trên khay nó đã thấy. Tập test ([[te_trays]] khay có cân) được khóa từ đầu, chỉ gồm lớp đã có trong train; ảnh tải từ Roboflow chỉ dùng cho train. Test <b>không</b> dùng để chọn cấu hình, epoch hay ngưỡng.</p>
+
+<h3>C. Huấn luyện</h3>
+<p class="ni">YOLO26s-seg (Ultralytics [1]), ảnh 640, siêu tham số cố định giữa các cấu hình. Mỗi cấu hình chạy 3 seed (0, 1, 2); báo cáo trung bình ± độ lệch chuẩn và so sánh theo cặp cùng seed. Cấu hình được chọn theo val; model cuối huấn luyện lại trên train + val đủ 150 epoch, lấy epoch cuối (không chọn theo test).</p>
+
+<h3>D. Chỉ số</h3>
+<ul class="c">
+<li><i>Phân đoạn:</i> mask/box mAP<sub>50-95</sub> và AP từng lớp (Ultralytics).</li>
+<li><i>Cơm, độc lập cách gán nhãn:</i> IoU vùng cơm và sai số diện tích cơm so với nhãn gốc. Cần thiết vì cấu hình “rice1” gộp các mảnh cơm thành một đa giác, làm thay đổi chính đáp án của mAP.</li>
+<li><i>Nhầm lẫn:</i> mỗi đa giác nhãn được gán lớp dự đoán phủ ≥ 30% diện tích; không có thì tính “bỏ sót”.</li>
+<li><i>Khối lượng:</i> MAE (g), sai số % trung vị, sai số tổng khay. Chọn phương pháp bằng kiểm định chéo bỏ-một-nhóm (CV) trên train + val ([[fit_trays]] khay); test chỉ chấm một lần. Món bị bỏ sót không tính vào MAE món nhưng tính 0 g vào tổng khay.</li>
+</ul>
+
+<h3>E. Ước lượng khối lượng</h3>
+<p class="ni">Diện tích món <i>A</i> = diện tích mask / diện tích đĩa; đĩa lấy từ YOLOE [3] (prompt “plate”), chọn đĩa chứa nhiều món dự đoán nhất, fit elip khi đĩa bị khung cắt. Với món khác cơm:</p>
+<div class="eq">log g = a<sub>món</sub> + b · log A,</div>
+<p class="ni">với <i>b</i> dùng chung, lớp có &lt; 3 khay dùng hệ số chung, và hiệu chỉnh smearing của Duan [6] khi đổi về thang gram. Với cơm, Depth-Anything-V2 Large [2] cho bản đồ disparity; fit mặt phẳng bền vững (lọc MAD lặp) trên phần mặt đĩa lộ ra, độ cao <i>h</i> = disparity − mặt phẳng, chuẩn hóa theo độ trải p95−p5 trong vùng đĩa; thể tích tương đối <i>V</i> = Σ max(<i>h</i>, 0) / diện tích đĩa (Hình 1).</p>
+
+<figure><img src="fig_depth.jpg" alt="Ảnh khay và bản đồ độ cao">
+<figcaption>Hình 1. Ảnh khay (trái) và bản đồ độ cao so với mặt đĩa từ Depth-Anything-V2 Large (phải; sáng = cao). Đống cơm nổi rõ dù diện tích nhìn thấy bị món khác che.</figcaption></figure>
+
+<h2>III. Kết quả</h2>
+<h3>A. Phân đoạn</h3>
+<p class="ni">Bảng II–III tách hai bộ nhãn vì danh sách lớp khác nhau. Trên v3, augmentation xoay/lật/copy-paste tăng mask mAP từ [[base]] lên [[aug]] nhưng làm sai số diện tích cơm tệ hơn; gộp cơm (rice1) cho mAP [[rice1]] và sai số cơm thấp nhất. Model cuối (aug + rice1, train + val) đạt [[full]] mask, [[full_box]] box, sai số diện tích cơm [[full_rice]]%.</p>
+
+<div class="tab"><div class="cap"><span class="no">Bảng II</span>mAP<sub>50-95</sub> phân đoạn (trung bình ± độ lệch chuẩn, 3 seed)</div>[[T2]]
+<div class="tn">“—”: model cuối đã huấn luyện trên val nên mAP val không có ý nghĩa. v3 và v4 khác danh sách lớp, không so trực tiếp giữa hai khối.</div></div>
+
+<div class="tab"><div class="cap"><span class="no">Bảng III</span>Chỉ số cơm độc lập cách gán nhãn, trên test</div>[[T2R]]
+<div class="tn">Mask trừ cơm: mask mAP<sub>50-95</sub> bỏ lớp cơm. IoU / sai số diện tích cơm so với nhãn gốc (chưa gộp). mIoU: trung bình IoU theo lớp ở mức điểm ảnh.</div></div>
+
+<h3>B. Từng món</h3>
+<p class="ni">Bảng IV cho thấy món có hình dạng rõ (trứng, xúc xích, thịt chiên) đạt AP ≥ 0.85, còn các món xào/kho nhiều dạng thì yếu. Gà chua ngọt gần như thất bại vì xuất hiện với 3 kiểu trình bày mà train chỉ có một. Cá viên dao động [[fb.min()|.2f]]–[[fb.max()|.2f]] giữa các seed — một lời nhắc rằng với 10 khay test, chênh lệch một seed không đủ kết luận. Tổng cộng [[conf_ok]]/[[conf_n]] ([[conf_pct]]%) vùng nhãn được nhận đúng, [[conf_miss]] vùng bị bỏ sót.</p>
+
+<div class="tab"><div class="cap"><span class="no">Bảng IV</span>AP mask từng món trên test, model cuối (3 seed)</div>[[T3]]
+<div class="tn">GT: số đa giác nhãn trong test. AP: trung bình ± độ lệch chuẩn qua 3 seed. Đúng / sót / hay nhầm thành: đối chiếu từng đa giác, model seed 1.</div></div>
+
+<h3>C. Khối lượng</h3>
+<p class="ni">Bảng V dùng mask do mô hình dự đoán, đúng như khi chạy ứng dụng; cả ba cách dùng chung một pipeline, cùng tập món và cách tính bỏ sót. Diện tích theo đĩa giảm MAE món khác cơm khoảng một nửa so với mốc khẩu phần trung bình ([[nr0|.1f]] → [[nr1|.1f]] g trên test), nhưng không cải thiện tổng khay vì cơm — món nặng nhất — vẫn đoán bằng trung bình. Với mask nhãn tay, MAE món đạt [[gt_upper|.1f]] g (giới hạn trên của cách 2D).</p>
+
+<div class="tab"><div class="cap"><span class="no">Bảng V</span>Ước lượng khối lượng với mask dự đoán: CV bỏ-một-nhóm trên train + val và test khóa</div>[[T4]]
+<div class="tn">CV: [[n_cv]] cặp ([[miss_cv]] bỏ sót); test: [[n_te]] cặp, [[miss_te]] món mô hình không nhận ra (không tính vào MAE món, tính 0 g vào tổng khay). Hai cột “Diện tích” dùng log-log cho món khác cơm, chỉ khác cách đoán cơm (trung bình vs. thể tích độ sâu).</div></div>
+
+<h3>D. Độ sâu cho cơm</h3>
+<p class="ni">Tính theo khay ([[gn]] khay, mask nhãn tay), tương quan Spearman giữa gram cơm và diện tích là [[gA|+.2f]], với thể tích từ model Small là [[gS|+.2f]] và Large là [[gL|+.2f]]. Với mask dự đoán: diện tích [[spA|+.2f]], thể tích [[spV|+.2f]]. Diện tích tương quan <i>âm</i> vì cơm càng nhiều càng bị món khác đè lên. Khi đưa vào hệ thống, độ sâu <b>không</b> cải thiện MAE cơm từng đĩa trên CV ([[c1|.1f]] so với [[c2|.1f]] g) nhưng giảm sai số tổng khay ở cả CV ([[kc1|.0f]] → [[kc2|.0f]] g; trung vị [[kp1|.1f]]% → [[kp2|.1f]]%) và test ([[k1|.0f]] → [[k2|.0f]] g). Chỉ kết luận ở mức tổng khay — con số ứng dụng hiển thị.</p>
+
+<h2>IV. Hạn chế</h2>
+<ul class="c">
+<li>Chỉ [[n_trays]] khay có cân, test [[te_trays]] khay: mọi con số khối lượng là ước lượng thô, khoảng tin cậy rộng.</li>
+<li>Lỗi lớn nhất nằm ở bước nhận diện: [[miss_te]]/[[n_te]] món có cân trong test bị bỏ sót, độ sâu không sửa được.</li>
+<li>Cùng một khay, diện tích món lệch trung bình ~25% giữa các ảnh do che khuất và góc chụp.</li>
+<li>Gram cơm thật suy ra bằng phép trừ nên nhiễu; món đựng trong hộp (không có đĩa) sai số lớn hơn nhiều.</li>
+</ul>
+
+<h2>V. Kết luận</h2>
+<p class="ni">Giao thức gồm chia theo nhóm buổi chụp, test khóa, 3 seed, chỉ số cơm độc lập cách gán nhãn và CV theo nhóm cho khối lượng giúp tách được cải tiến thật khỏi dao động ngẫu nhiên. Tinh chỉnh YOLO26s-seg đạt mask mAP [[full]]; diện tích chuẩn hóa theo đĩa đủ tốt cho món khác cơm, còn cơm cần thông tin 3D — độ sâu đơn ảnh là hướng khả thi không cần phần cứng thêm. Ứng dụng nên cho người dùng xác nhận các món mô hình không chắc chắn.</p>
+
+<h2>Tài liệu tham khảo</h2>
+<div class="ref">
+<p>[1] G. Jocher, J. Qiu, and Ultralytics, “Ultralytics YOLO,” software, 2025. [Online]. Available: https://github.com/ultralytics/ultralytics</p>
+<p>[2] L. Yang, B. Kang, Z. Huang, Z. Zhao, X. Xu, J. Feng, and H. Zhao, “Depth Anything V2,” in <i>Advances in Neural Information Processing Systems (NeurIPS)</i>, 2024.</p>
+<p>[3] A. Wang, L. Liu, H. Chen, Z. Lin, J. Han, and G. Ding, “YOLOE: Real-time seeing anything,” arXiv:2503.07465, 2025.</p>
+<p>[4] G. Ciocca, P. Napoletano, and R. Schettini, “Food recognition: A new dataset, experiments, and results,” <i>IEEE J. Biomed. Health Inform.</i>, 2017.</p>
+<p>[5] Q. Thames <i>et al.</i>, “Nutrition5k: Towards automatic nutritional understanding of generic food,” in <i>Proc. IEEE/CVF Conf. Computer Vision and Pattern Recognition (CVPR)</i>, 2021.</p>
+<p>[6] N. Duan, “Smearing estimate: A nonparametric retransformation method,” <i>J. Amer. Statist. Assoc.</i>, 1983.</p>
+</div>
+</div>
+</body></html>
