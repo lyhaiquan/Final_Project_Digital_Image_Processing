@@ -2,7 +2,7 @@
 
 Đồ án môn Xử lý ảnh số. Chụp một ảnh khay cơm căng tin, chương trình sẽ:
 
-1. **Khoanh vùng từng món** (45 món) bằng mô hình YOLO26s-seg mà nhóm đã fine-tune.
+1. **Khoanh vùng từng món** (45 món) bằng mô hình YOLO26s-seg mà nhóm đã fine-tune, rồi **phân loại lại từng vùng** bằng đặc trưng DINOv2 để giảm nhầm món và bỏ sót.
 2. **Ước lượng số gram** mỗi món, dựa trên diện tích món so với đĩa (đĩa được tìm bằng YOLOE). Riêng cơm có thể ước lượng thêm bằng độ sâu (Depth-Anything-V2).
 3. **Quy ra calo** theo bảng dinh dưỡng, và **đánh dấu những món mô hình chưa chắc** để người dùng xác nhận.
 
@@ -61,6 +61,8 @@ pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
 pip install -r requirements.txt
 ```
 
+> Lần chạy đầu tiên chương trình tự tải DINOv2-base (khoảng 330 MB) về máy; các lần sau không cần mạng.
+
 ### Kiểm tra
 
 ```bash
@@ -111,7 +113,8 @@ python predict.py thu_muc_anh/                     # cả thư mục
 | Tùy chọn | Ý nghĩa |
 |---|---|
 | `--depth` | Ước lượng **cơm** bằng độ sâu (Depth-Anything-V2 Large) thay vì khẩu phần trung bình. Sai số tổng khay giảm từ ~113 g xuống ~83 g. **Lần đầu tự tải model khoảng 1,3 GB**; nên có GPU, vì chạy bằng CPU mất vài giây mỗi ảnh. |
-| `--flag-conf 0.5` | Món có độ tin cậy dưới ngưỡng này sẽ bị đánh dấu "cần xác nhận" (mặc định 0.5). |
+| `--no-dino` | Tắt bước phân loại lại bằng DINOv2: chỉ dùng YOLO như bản cũ. Nhanh hơn (CPU: ~0,5 s thay vì ~3 s mỗi ảnh) nhưng nhầm và sót món nhiều hơn (xem mục 6). |
+| `--flag-conf 0.75` | Món có độ tin cậy dưới ngưỡng này sẽ bị đánh dấu "cần xác nhận" (mặc định 0.75; với `--no-dino` là 0.5). |
 | `--device cpu` | Bắt buộc chạy bằng CPU. `--device 0` để chạy bằng GPU số 0. |
 | `--out ten_thu_muc` | Đổi thư mục lưu kết quả (mặc định `outputs/`). |
 
@@ -126,7 +129,7 @@ Ví dụ: `python predict.py examples --depth`
 ```python
 from calo_khay import CaloKhay
 
-ck = CaloKhay(use_depth=False)          # nạp model MỘT lần khi server khởi động
+ck = CaloKhay(use_depth=False)          # nạp model MỘT lần khi server khởi động (use_dino=False để tắt DINOv2)
 res = ck.analyze("anh_khay.jpg")        # nhận đường dẫn ảnh hoặc ảnh numpy (BGR, đọc bằng cv2)
 print(res["total"])                     # {'grams': 562, 'kcal': 578, 'error_pct': 30, 'daily_pct': 29}
 ```
@@ -144,9 +147,9 @@ Cấu trúc JSON trả về:
       "id": 1,
       "cls": "potato",               // mã món (tiếng Anh, xem models/calories.csv)
       "name": "khoai tây",           // tên tiếng Việt
-      "conf": 0.968,                 // độ tin cậy của mô hình
-      "needs_confirm": false,        // true -> giao diện hỏi lại người dùng
-      "suggestions": [],             // các món hay bị nhầm với món này (mã món)
+      "conf": 0.968,                 // độ tin cậy (xác suất kết hợp DINOv2 + YOLO)
+      "needs_confirm": false,        // true -> giao diện hỏi lại người dùng (conf < 0.75)
+      "suggestions": [],             // món có thể đúng hơn: lựa chọn thứ 2-3 của mô hình, rồi các món hay bị nhầm (mã món)
       "area_px": 88179,              // diện tích món (pixel)
       "area_ratio": 0.1555,          // diện tích món / diện tích đĩa
       "grams": 84,
@@ -173,6 +176,7 @@ Khi người dùng đổi tên món, kcal tính lại bằng: `kcal = grams × k
 │   └── draw.py              vẽ kết quả lên ảnh
 ├── models/
 │   ├── food_seg_v4_final.pt mô hình phân đoạn 45 món (nhóm tự train)
+│   ├── dino_head.npz        đầu phân loại 45 món trên đặc trưng DINOv2 (fit trên nhãn train + val)
 │   ├── yoloe_plate.pt       YOLOE đã gắn sẵn lớp "plate" để tìm đĩa
 │   ├── gram_model.json      hệ số công thức gram (fit trên dữ liệu đã cân)
 │   └── calories.csv         45 món: tên Việt, kcal/100 g, nguồn số liệu
@@ -184,7 +188,8 @@ Khi người dùng đổi tên món, kcal tính lại bằng: `kcal = grams × k
 │   ├── REPORT_gram.md       ghi chép kết quả ước lượng gram và độ sâu
 │   └── results/             số liệu gốc (CSV) của mọi bảng trong báo cáo
 ├── research/                code chuẩn bị dữ liệu, notebook train, script đánh giá (cần bộ dữ liệu gốc)
-└── tools/export_gram_model.py  tạo lại gram_model.json (cần bộ dữ liệu gốc)
+│   └── improve/             các thử nghiệm cải thiện sau khi train (DINOv2, gộp seed, hệ số gram...) và kết quả
+└── tools/                   tạo lại gram_model.json và dino_head.npz (cần bộ dữ liệu gốc)
 ```
 
 ---
@@ -193,7 +198,8 @@ Khi người dùng đổi tên món, kcal tính lại bằng: `kcal = grams × k
 
 | Bước | Mô hình / cách làm | Ghi chú |
 |---|---|---|
-| Phân đoạn món | YOLO26s-seg, ảnh 640, ngưỡng tin cậy 0.25 | Fine-tune trên 211 ảnh (train + val), 150 epoch |
+| Phân đoạn món | YOLO26s-seg, ảnh 640 | Fine-tune trên 211 ảnh (train + val), 150 epoch |
+| Phân loại lại | DINOv2-base (không train): trung bình đặc trưng trong mask → hồi quy logistic, kết hợp với điểm YOLO | Lấy cả mask yếu (conf ≥ 0.1), khử mask trùng, bỏ mask yếu mà DINOv2 không chắc. Tham số chọn trên tập val |
 | Tìm đĩa | YOLOE-11s-seg với prompt "plate" | Chọn đĩa chứa nhiều đồ ăn nhất; nếu đĩa bị khung cắt thì fit elip để bù |
 | Gram món khác cơm | `log g = a_món + b·log(diện tích món / diện tích đĩa)` | Hệ số `b` dùng chung cho mọi món, cộng hiệu chỉnh smearing |
 | Gram cơm | Khẩu phần trung bình (~228 g), hoặc độ sâu nếu có `--depth` | Depth-Anything-V2: độ cao so với mặt đĩa, tính ra "thể tích" tương đối |
@@ -201,18 +207,28 @@ Khi người dùng đổi tên món, kcal tính lại bằng: `kcal = grams × k
 
 ## 6. Kết quả (tập test khóa: 36 ảnh, 10 khay)
 
-| Chỉ số | Giá trị |
-|---|---|
-| Mask mAP50-95 | **0.566 ± 0.014** (3 seed) |
-| Vùng món nhận đúng | 266 / 382 (70%) |
-| Sai số gram mỗi món (MAE) | 26.8 g; bật độ sâu: **23.8 g** (mốc đoán theo khẩu phần trung bình: 36.0 g) |
-| Sai số tổng khay (MAE) | 113 g; bật độ sâu: **83 g** |
+Mask mAP50-95 của YOLO: **0.566 ± 0.014** (3 seed). Các chỉ số còn lại đo trên model đang dùng:
 
-Chi tiết xem `docs/benchmark_ieee.pdf`.
+| Chỉ số | Chỉ YOLO (`--no-dino`) | + DINOv2 (mặc định) |
+|---|---|---|
+| Vùng món nhận đúng (trên 382) | 261 (68%) | **273 (71%)** |
+| Vùng món bị bỏ sót | 41 | **33** |
+| Danh sách món của ảnh (F1) | 79.5% | **84.5%** |
+| Món "ma" (báo có nhưng không có) | 40 | **33** |
+| Món sai mà không được gắn cờ "cần xác nhận" | 27 | **14** |
+| Sai số gram mỗi món (MAE) | 26.8 g; bật độ sâu 23.8 g | 26.5 g; bật độ sâu 24.5 g |
+| Sai số gram tổng khay (MAE) | 91 g; bật độ sâu 72 g | 89 g; bật độ sâu 73 g |
+| Sai số kcal tổng khay (MAE) | 122 kcal; bật độ sâu 108 kcal | **111 kcal**; bật độ sâu **98 kcal** |
+
+DINOv2 cải thiện phần **nhận diện** và **calo**; sai số **gram** gần như không đổi. Cả 3 seed đều cho cùng chiều cải thiện.
+Mốc so sánh cho gram mỗi món: đoán theo khẩu phần trung bình sai 36.0 g.
+
+Tổng khay ở bảng này tính trên mọi món chương trình báo ra, kể cả món "ma". Báo cáo `docs/benchmark_ieee.pdf` dùng cách tính cũ
+(chỉ cộng các món có cân) nên ghi 113 g / 83 g cho cùng model chỉ-YOLO. Chi tiết các thử nghiệm: `research/improve/README.md`.
 
 **Giới hạn cần biết:**
-- Khoảng 26% món trong test bị bỏ sót. Các món hay nhầm: gà chua ngọt, cá viên, gà xào ớt chuông, rau muống.
-- Sai số khoảng ±30% mỗi món.
+- Khoảng 9% vùng món trong test vẫn bị bỏ sót (chỉ YOLO: 11%); khoảng 20% bị nhận nhầm. Các món hay nhầm: gà chua ngọt, cá viên, gà xào ớt chuông, rau muống.
+- "±30% mỗi món" chỉ đúng với khoảng 60% số món; muốn phủ khoảng 3/4 số món phải nói ±50%.
 - Dữ liệu cân mới có 38 khay, nên các con số chỉ là ước lượng thô.
 - Đồ đựng trong hộp (không có đĩa) sẽ kém chính xác hơn.
 
@@ -223,6 +239,7 @@ Chi tiết xem `docs/benchmark_ieee.pdf`.
 | Hiện tượng | Cách xử lý |
 |---|---|
 | `ModuleNotFoundError: No module named 'torch'` | Chưa làm Bước 3, hoặc chưa kích hoạt `.venv`. |
+| Lỗi mạng khi tải `facebook/dinov2-base` | Lần đầu cần mạng để tải DINOv2. Chưa có mạng thì chạy tạm với `--no-dino`. |
 | Cảnh báo *"To support symlinks on Windows…"* | Vô hại, bỏ qua được (xuất hiện khi tải Depth-Anything lần đầu). |
 | `GPU: False` dù máy có card NVIDIA | Đã cài nhầm bản CPU. Gỡ đi rồi cài lại theo Bước 3: `pip uninstall torch torchvision` |
 | Lỗi khi đọc file `yoloe_plate.pt` | Kiểm tra lại phiên bản: phải đúng `ultralytics==8.4.163`. |
@@ -232,6 +249,7 @@ Chi tiết xem `docs/benchmark_ieee.pdf`.
 ## 8. Giấy phép thư viện
 
 - Ultralytics YOLO: AGPL-3.0.
+- DINOv2: Apache-2.0.
 - Depth-Anything-V2 Large: CC-BY-NC-4.0, chỉ dùng phi thương mại.
 
-Cả hai phù hợp cho đồ án học tập.
+Tất cả phù hợp cho đồ án học tập.

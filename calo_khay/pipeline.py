@@ -1,7 +1,10 @@
 """Calo Khay: ảnh khay cơm -> từng món (mask, độ tin cậy) -> gram -> kcal.
 
 Các bước (giống hệt pipeline dùng để chấm điểm trong báo cáo):
-  1. YOLO26s-seg (models/food_seg_v4_final.pt, 45 món): mask từng món, conf >= 0.25.
+  1. YOLO26s-seg (models/food_seg_v4_final.pt, 45 món): mask từng món.
+     Mặc định có thêm bước DINOv2 (RegionClassifier): lấy cả mask conf >= 0.1, phân loại lại từng vùng bằng đặc trưng
+     DINOv2 (models/dino_head.npz) kết hợp với điểm của YOLO, khử mask trùng, bỏ mask yếu mà DINO không chắc.
+     Tắt bằng use_dino=False -> như cũ: chỉ YOLO, conf >= 0.25.
   2. YOLOE (models/yoloe_plate.pt, đã gắn sẵn chữ "plate"): tìm đĩa chứa đồ ăn -> diện tích đĩa (pixel),
      fit elip nếu đĩa bị khung ảnh cắt. Diện tích đĩa là "thước đo" để khử khoảng cách chụp.
   3. Món khác cơm:  gram = exp(a_món + b·log(diện tích món / diện tích đĩa)) · smearing   (models/gram_model.json)
@@ -21,7 +24,14 @@ import pandas as pd
 HERE = os.path.dirname(os.path.abspath(__file__))
 MODELS = os.path.normpath(os.path.join(HERE, "..", "models"))
 DEPTH_HF = "depth-anything/Depth-Anything-V2-Large-hf"
+DINO_HF = "facebook/dinov2-base"
 SEG_CONF, PLATE_CONF, IMGSZ = 0.25, 0.1, 640
+# bước DINOv2 (tham số chọn trên tập val, xem research/improve/):
+SEG_CONF_LOW = 0.1        # lấy cả mask yếu, để DINO quyết định
+DINO_W = 0.8              # trọng số log-xác suất DINO khi kết hợp với YOLO
+NMS_IOU = 0.7             # hai mask trùng nhau quá mức này -> giữ mask conf cao hơn
+DINO_GATE = 0.5           # mask conf < 0.25 chỉ được giữ nếu xác suất kết hợp >= ngưỡng này
+FLAG_DINO, FLAG_YOLO = 0.75, 0.5   # dưới ngưỡng -> "cần xác nhận"
 ERROR_PCT = 30            # sai số hiển thị cho mỗi món (QT-06)
 DAILY_KCAL = 2000         # nhu cầu tham chiếu một ngày (QT-11)
 
@@ -86,6 +96,98 @@ def fit_plane(d: np.ndarray, ring: np.ndarray, iters: int = 4):
     return coef[0] * xx + coef[1] * yy + coef[2]
 
 
+# ----------------------------------------------------------------------------- phân loại lại bằng DINOv2
+def torch_device(device=None) -> str:
+    """'cpu' / '0' (kiểu Ultralytics) / None -> tên thiết bị của torch."""
+    import torch
+    if device is None or device == "":
+        return "cuda" if torch.cuda.is_available() else "cpu"
+    return f"cuda:{device}" if str(device).isdigit() else str(device)
+
+
+class RegionClassifier:
+    """Mỗi vùng món: crop vuông quanh mask (đệm 15%) -> DINOv2-base 224 px -> trung bình các token patch NẰM TRONG mask
+    -> hồi quy logistic (models/dino_head.npz, fit trên polygon nhãn tay train+val bằng tools/export_dino_head.py)."""
+    S, P, PAD = 224, 14, 0.15
+    MEAN, STD = np.float32([0.485, 0.456, 0.406]), np.float32([0.229, 0.224, 0.225])
+
+    def __init__(self, models_dir: str = MODELS, device=None, load_head: bool = True):
+        import torch
+        from transformers import AutoModel
+        self.torch, self.dev = torch, torch_device(device)
+        self.model = AutoModel.from_pretrained(DINO_HF).to(self.dev).eval()
+        self.half = self.dev.startswith("cuda")
+        if self.half:
+            self.model.half()
+        self.G = self.S // self.P
+        if load_head:
+            h = np.load(os.path.join(models_dir, "dino_head.npz"), allow_pickle=False)
+            self.W, self.b, self.names = h["coef"], h["intercept"], [str(x) for x in h["names"]]
+
+    def _crop(self, bgr, mask):
+        S, G = self.S, self.G
+        ys, xs = np.nonzero(mask)
+        x0, x1, y0, y1 = xs.min(), xs.max() + 1, ys.min(), ys.max() + 1
+        side = max(x1 - x0, y1 - y0) * (1 + 2 * self.PAD)
+        a, b = int(round((x0 + x1) / 2 - side / 2)), int(round((y0 + y1) / 2 - side / 2)); side = int(round(side))
+        M = np.float32([[1, 0, -a], [0, 1, -b]])          # phần ngoài ảnh tô xám
+        c = cv2.warpAffine(bgr, M, (side, side), borderValue=(124, 116, 104))
+        mk = cv2.warpAffine(mask.astype(np.uint8), M, (side, side))
+        c = cv2.resize(c, (S, S), interpolation=cv2.INTER_AREA if side > S else cv2.INTER_CUBIC)
+        mk = cv2.resize(mk.astype(np.float32), (G, G), interpolation=cv2.INTER_AREA)
+        if mk.sum() < 1e-6:
+            mk[:] = 1
+        return (c[:, :, ::-1].astype(np.float32) / 255 - self.MEAN) / self.STD, mk / mk.sum()
+
+    def features(self, bgr: np.ndarray, masks, bs: int = 16) -> np.ndarray:
+        """[N, 768], đã chuẩn hoá L2."""
+        torch = self.torch
+        masks = [m for m in masks]
+        if not masks:
+            return np.zeros((0, 768), np.float32)
+        xs, ws = zip(*[self._crop(bgr, m) for m in masks])
+        x, w = np.stack(xs).transpose(0, 3, 1, 2), np.stack(ws).reshape(len(xs), -1, 1)
+        out = []
+        with torch.no_grad():
+            for i in range(0, len(x), bs):
+                xb = torch.from_numpy(np.ascontiguousarray(x[i:i + bs])).to(self.dev)
+                t = self.model(pixel_values=xb.half() if self.half else xb).last_hidden_state.float()
+                out.append((t[:, -self.G * self.G:] * torch.from_numpy(w[i:i + bs]).to(self.dev)).sum(1).cpu().numpy())
+        f = np.concatenate(out)
+        return f / np.maximum(np.linalg.norm(f, axis=1, keepdims=True), 1e-12)
+
+    def proba(self, bgr: np.ndarray, masks) -> np.ndarray:
+        """[N, số lớp] theo thứ tự self.names."""
+        z = self.features(bgr, masks) @ self.W.T + self.b
+        z = np.exp(z - z.max(1, keepdims=True))
+        return z / z.sum(1, keepdims=True)
+
+
+def relabel(cls: np.ndarray, conf: np.ndarray, P: np.ndarray, masks: np.ndarray):
+    """Kết hợp DINO với YOLO rồi lọc. -> (lớp mới [N], giữ [N] bool, xác suất kết hợp [N, K])."""
+    n, K = P.shape
+    if n == 0:
+        return cls, np.zeros(0, bool), P
+    py = np.repeat(((1 - conf) / (K - 1))[:, None], K, 1); py[np.arange(n), cls] = conf   # YOLO chỉ cho điểm lớp nó chọn
+    lp = DINO_W * np.log(P + 1e-6) + (1 - DINO_W) * np.log(py + 1e-6)
+    q = np.exp(lp - lp.max(1, keepdims=True)); q /= q.sum(1, keepdims=True)
+    new, pm = q.argmax(1), q.max(1)
+    keep = (conf >= SEG_CONF) | (pm >= DINO_GATE)
+    # khử mask trùng, không phân biệt lớp (IoU tính trên mask thu nhỏ cho nhanh)
+    H, W = masks.shape[1:]; s = 256 / max(H, W)
+    small = np.stack([cv2.resize(m.astype(np.uint8), (max(1, round(W * s)), max(1, round(H * s))), interpolation=cv2.INTER_NEAREST)
+                      for m in masks]).reshape(n, -1).astype(np.float32)
+    area = small.sum(1); inter = small @ small.T
+    iou = inter / np.maximum(area[:, None] + area[None] - inter, 1)
+    order = np.argsort(-conf, kind="stable")
+    for a, i in enumerate(order):
+        if keep[i]:
+            for j in order[a + 1:]:
+                if iou[i, j] >= NMS_IOU:
+                    keep[j] = False
+    return new, keep, q
+
+
 # ----------------------------------------------------------------------------- gram
 def _loglog(m: dict, cls: str, x: float) -> float:
     a = m["intercept"][cls] if cls in m["intercept"] else m["intercept"]["_other"]
@@ -93,9 +195,11 @@ def _loglog(m: dict, cls: str, x: float) -> float:
 
 
 class CaloKhay:
-    def __init__(self, use_depth: bool = False, device: str | None = None, models_dir: str = MODELS):
+    def __init__(self, use_depth: bool = False, device: str | None = None, models_dir: str = MODELS, use_dino: bool = True):
         from ultralytics import YOLO, YOLOE
         self.device = device
+        self.use_dino = use_dino
+        self.dino = RegionClassifier(models_dir, device) if use_dino else None
         self.seg = YOLO(os.path.join(models_dir, "food_seg_v4_final.pt"))
         self.plate = YOLOE(os.path.join(models_dir, "yoloe_plate.pt"))
         self.gm = json.load(open(os.path.join(models_dir, "gram_model.json"), encoding="utf-8"))
@@ -107,7 +211,7 @@ class CaloKhay:
             import torch
             from transformers import AutoImageProcessor, AutoModelForDepthEstimation
             self.torch = torch
-            self.dev = device or ("cuda" if torch.cuda.is_available() else "cpu")
+            self.dev = torch_device(device)
             self.dproc = AutoImageProcessor.from_pretrained(DEPTH_HF)
             self.dmodel = AutoModelForDepthEstimation.from_pretrained(DEPTH_HF).to(self.dev).eval()
 
@@ -132,7 +236,10 @@ class CaloKhay:
             return gm["class_mean_g"].get(cls, gm["global_mean_g"]), "class_mean"
         return _loglog(gm["area"], cls, A), "area"
 
-    def analyze(self, image, flag_conf: float = 0.5) -> dict:
+    def analyze(self, image, flag_conf: float | None = None) -> dict:
+        """flag_conf: món có độ tin cậy dưới ngưỡng này -> needs_confirm. None = mặc định (0.75 khi có DINO, 0.5 khi không)."""
+        if flag_conf is None:
+            flag_conf = FLAG_DINO if self.use_dino else FLAG_YOLO
         bgr = cv2.imread(image) if isinstance(image, str) else image
         if bgr is None:
             raise FileNotFoundError(image)
@@ -140,12 +247,28 @@ class CaloKhay:
         warnings = []
 
         # 1) phân đoạn món
-        r = self.seg.predict(bgr, conf=SEG_CONF, imgsz=IMGSZ, retina_masks=True, verbose=False, device=self.device)[0]
+        r = self.seg.predict(bgr, conf=SEG_CONF_LOW if self.use_dino else SEG_CONF, imgsz=IMGSZ, retina_masks=True,
+                             verbose=False, device=self.device)[0]
         dets = []
         if r.masks is not None:
-            for mk, c, cf in zip(r.masks.data.cpu().numpy() > 0.5, r.boxes.cls.cpu().numpy().astype(int),
-                                 r.boxes.conf.cpu().numpy()):
-                dets.append(dict(cls=self.seg.names[c], conf=float(cf), mask=mk, polys=mask_polygons(mk)))
+            masks = r.masks.data.cpu().numpy() > 0.5
+            cls, conf = r.boxes.cls.cpu().numpy().astype(int), r.boxes.conf.cpu().numpy().astype(float)
+            ok = masks.reshape(len(masks), -1).any(1)
+            masks, cls, conf = masks[ok], cls[ok], conf[ok]
+            if self.use_dino and len(masks):
+                # xác suất DINO theo thứ tự lớp của YOLO
+                Pd = self.dino.proba(bgr, masks); P = np.zeros((len(masks), len(self.seg.names)))
+                idx = {n: i for i, n in self.seg.names.items()}
+                for j, n in enumerate(self.dino.names):
+                    P[:, idx[n]] = Pd[:, j]
+                cls, keep, q = relabel(cls, conf, P, masks)
+                for mk, c, qi, k in zip(masks, cls, q, keep):
+                    if k:
+                        alt = [self.seg.names[int(a)] for a in np.argsort(-qi)[1:3] if qi[a] >= 0.1]
+                        dets.append(dict(cls=self.seg.names[int(c)], conf=float(qi[c]), mask=mk, polys=mask_polygons(mk), alt=alt))
+            else:
+                for mk, c, cf in zip(masks, cls, conf):
+                    dets.append(dict(cls=self.seg.names[int(c)], conf=float(cf), mask=mk, polys=mask_polygons(mk), alt=[]))
         if not dets:
             warnings.append("no_food")
         food = np.zeros((H, W), bool)
@@ -168,8 +291,10 @@ class CaloKhay:
         # gộp theo món (mỗi món một dòng)
         by_cls: dict[str, dict] = {}
         for d in dets:
-            e = by_cls.setdefault(d["cls"], dict(mask=np.zeros((H, W), bool), conf=0.0, polygons=[]))
-            e["mask"] |= d["mask"]; e["conf"] = max(e["conf"], d["conf"]); e["polygons"] += d["polys"]
+            e = by_cls.setdefault(d["cls"], dict(mask=np.zeros((H, W), bool), conf=0.0, polygons=[], alt=[]))
+            e["mask"] |= d["mask"]; e["polygons"] += d["polys"]
+            if d["conf"] > e["conf"]:
+                e["conf"], e["alt"] = d["conf"], d["alt"]
 
         # 3) độ sâu cho cơm
         V = None
@@ -194,7 +319,8 @@ class CaloKhay:
             items.append(dict(
                 id=i + 1, cls=cls, name=self.name_vi.get(cls, cls), conf=round(e["conf"], 3),
                 needs_confirm=e["conf"] < flag_conf,
-                suggestions=self.gm.get("confusions", {}).get(cls, []),
+                # gợi ý: lớp DINO xếp thứ 2-3 (nếu có), rồi tới các món hay bị nhầm theo bảng nhầm lẫn
+                suggestions=list(dict.fromkeys(e["alt"] + self.gm.get("confusions", {}).get(cls, [])))[:3],
                 area_px=area_px, area_ratio=None if A is None else round(A, 4),
                 grams=round(g), gram_method=how, kcal=round(g * self.kcal100.get(cls, 0) / 100),
                 polygons=e["polygons"]))

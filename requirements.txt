@@ -6,5 +6,5 @@ numpy>=1.26
 pandas>=2.0
 pillow>=10.0
 matplotlib>=3.8
-# chỉ cần khi chạy với --depth (Depth-Anything-V2):
+# DINOv2 (bước phân loại lại, mặc định bật) và Depth-Anything-V2 (--depth):
 transformers==5.22.2

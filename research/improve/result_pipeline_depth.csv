@@ -1,0 +1,17 @@
+,cũ (chỉ YOLO),mới (+DINOv2)
+vùng đúng,261.0,273.0
+vùng nhầm,80.0,76.0
+vùng sót,41.0,33.0
+cặp F1 %,79.5,84.5
+món ma (cặp),40.0,33.0
+cần xác nhận %,13.7,25.2
+lỗi được gắn cờ %,32.5,57.6
+lỗi lọt (không cờ),27.0,14.0
+cặp cân bị sót,41.0,29.0
+cặp ma (ảnh có cân),36.0,29.0
+MAE món (g),23.8,24.5
+MAE gram khay,72.0,73.2
+lệch gram khay,18.4,28.2
+MAE kcal khay,108.5,98.5
+medAPE kcal khay %,24.1,19.4
+lệch kcal khay,59.0,55.9
