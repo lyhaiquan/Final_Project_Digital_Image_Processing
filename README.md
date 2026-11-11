@@ -180,6 +180,7 @@ Khi người dùng đổi tên món, kcal tính lại bằng: `kcal = grams × k
 ├── docs/
 │   ├── benchmark_ieee.pdf   báo cáo benchmark (khổ IEEE)
 │   ├── proposal_frontend.pdf thiết kế giao diện web
+│   ├── NGHIEP_VU.md         đặc tả nghiệp vụ backend + frontend (bản PDF: nghiep_vu.pdf)
 │   ├── REPORT_gram.md       ghi chép kết quả ước lượng gram và độ sâu
 │   └── results/             số liệu gốc (CSV) của mọi bảng trong báo cáo
 ├── research/                code chuẩn bị dữ liệu, notebook train, script đánh giá (cần bộ dữ liệu gốc)
