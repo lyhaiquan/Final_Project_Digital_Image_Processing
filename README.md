@@ -75,6 +75,20 @@ Máy có GPU thì `GPU: True`, máy chỉ có CPU thì `GPU: False`. Cả hai đ
 
 ## 2. Chạy thử
 
+### Giao diện web (chưa cần backend)
+
+Frontend chạy độc lập với dữ liệu mẫu, gồm quét ảnh, chỉnh món/gram, nhật ký, bảng calo và benchmark:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Xem [hướng dẫn frontend](frontend/README.md) để build và đổi sang API thật bằng `VITE_USE_MOCK=false` cùng `VITE_API_BASE_URL`. Bản mock không chạy nhận diện AI trên ảnh được tải lên.
+
+### Chạy pipeline Python
+
 Chạy trên 2 ảnh mẫu có sẵn trong `examples/`:
 
 ```bash

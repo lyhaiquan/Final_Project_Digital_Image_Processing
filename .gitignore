@@ -19,3 +19,9 @@ yoloe-11*.pt
 .idea/
 .DS_Store
 Thumbs.db
+
+# frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.local
