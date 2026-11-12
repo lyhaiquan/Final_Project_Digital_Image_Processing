@@ -228,3 +228,60 @@ def test_catalog_matches_pipeline_formula():
     assert cat.grams("potato", None) == (round(cat.gm["class_mean_g"]["potato"]), "class_mean")
     assert cat.grams("rice", 0.3)[1] == "rice_mean"
     assert not math.isnan(cat.rows["drink"]["kcal_per_100g"])
+
+
+# ------------------------------------------------------------------ tương thích frontend (frontend/src/api.js, main.js)
+def test_frontend_flow(client, scanned):
+    items = scanned["items"]
+    assert all(i["source"] == "model" for i in items)
+    # frontend đổi món: giữ nguyên item, đổi cls, bỏ grams, source = renamed, needs_confirm = false
+    renamed = {**items[1], "cls": "braised_egg", "source": "renamed", "needs_confirm": False}
+    renamed.pop("grams")
+    manual = {"id": 3, "cls": "potato", "source": "manual", "polygons": [], "needs_confirm": False}
+    r = client.post("/api/recalc", json={"scan_id": scanned["scan_id"], "items": [items[0], renamed, manual]})
+    assert r.status_code == 200, r.text
+    out = r.json()["items"]
+    # metadata vùng được trả lại để giữ viền món trên ảnh
+    assert out[0]["polygons"] == items[0]["polygons"] and out[0]["id"] == 1 and out[0]["region_id"] == 1
+    assert out[1]["polygons"] == items[1]["polygons"] and out[1]["suggestions"] == items[1]["suggestions"]
+    assert out[1]["region_id"] == 2 and out[1]["confirmed"] is True and out[1]["name"] == "trứng kho"
+    assert out[2]["region_id"] is None and out[2]["id"] == 3
+
+    # lưu với món cần xác nhận bị bỏ qua (needs_confirm = true, không gửi confirmed)
+    skipped = {**items[1]}
+    r = client.post("/api/meals", headers=H, json={"scan_id": scanned["scan_id"], "items": [items[0], skipped],
+                                                   "eaten_at": "2026-11-12T05:30:00.000Z", "share_corrections": False})
+    assert r.status_code == 201, r.text
+    day = client.get("/api/meals?date=2026-11-12", headers=H).json()
+    meal = day["meals"][0]
+    assert meal["total"]["kcal"] == meal["total_kcal"] and meal["total"]["grams"] == meal["total_g"]
+    assert day["total"]["kcal"] == day["total_kcal"] and day["total"]["daily_pct"] == day["daily_pct"]
+    assert [i["needs_confirm"] for i in meal["items"]] == [False, True]
+
+
+def test_error_body_has_code(client):
+    r = client.post("/api/scan", files={"image": ("a.jpg", b"", "image/jpeg")}).json()
+    assert r["code"] == r["error"] == "invalid_image"
+
+
+def test_benchmark_has_frontend_fields(client):
+    r = client.get("/api/benchmark")
+    if r.status_code == 404:
+        pytest.skip("chưa sinh models/benchmark.json")
+    b = r.json()
+    assert {"source", "sample", "metrics", "comparisons", "ap", "confusions"} <= set(b)
+    assert all({"label", "value", "detail"} <= set(m) for m in b["metrics"])
+    assert all({"label", "before", "after", "better"} <= set(c) for c in b["comparisons"])
+    assert isinstance(b["confusions"], dict)
+
+
+def test_recalc_unchanged_items_keep_kcal():
+    """Kết quả mô hình (mock/scan.json là output thật) đưa qua /recalc nguyên trạng thì kcal không được nhảy ±1."""
+    import json
+    from backend.schemas import ItemIn
+    from backend.services.calc import recalc
+    root = Path(__file__).resolve().parents[2]
+    scan = json.loads((root / "backend" / "mock" / "scan.json").read_text(encoding="utf-8"))
+    out = recalc(Catalog(root / "models"), [ItemIn(**i) for i in scan["items"]])
+    assert [o["kcal"] for o in out] == [i["kcal"] for i in scan["items"]]
+    assert sum(o["kcal"] for o in out) == scan["total"]["kcal"]

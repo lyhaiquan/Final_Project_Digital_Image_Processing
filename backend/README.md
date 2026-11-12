@@ -32,7 +32,7 @@ Test (SQLite + mock, không cần MySQL/GPU): `python -m pytest backend/tests -q
 | — | CSDL | **MySQL** thay SQLite |
 | 7 | Định danh thiết bị | Header **`X-Device-Id`** (UUID v4 frontend tạo, lưu localStorage) |
 | 8 | Thời gian | `eaten_at` gửi ISO 8601 có offset; DB lưu UTC; `?date=` tính theo giờ Việt Nam; trả về `+07:00` |
-| 9 | Định dạng lỗi | `{"error": "<mã>", "message": "<câu tiếng Việt>"}` |
+| 9 | Định dạng lỗi | `{"error": "<mã>", "code": "<mã>", "message": "<câu tiếng Việt>"}` (`code` trùng `error`, frontend đọc `code`) |
 | 10 | Chọn suất cơm / chỉnh gram | Gửi `grams` trong item (giữ `source` như cũ) |
 | 11 | Món chưa xác nhận | Item có `confirmed: false` |
 | 12 | Ảnh thu nhỏ trong Nhật ký | **Frontend tự giữ** (IndexedDB); backend không trả ảnh |
@@ -43,12 +43,12 @@ Test (SQLite + mock, không cần MySQL/GPU): `python -m pytest backend/tests -q
 | Endpoint | Ghi chú |
 |---|---|
 | `POST /api/scan` | multipart `image`; query `depth`, `flag_conf`; header `X-Device-Id` (tuỳ chọn). Trả kết quả pipeline + `scan_id`, `model_version`, `timing_ms`. Cảnh báo: `no_food`, `no_plate`, `depth_plane_failed`, `depth_unavailable`, `blurry` |
-| `POST /api/recalc` | `{scan_id?, items: [{region_id?, cls, source, area_ratio?, grams?, orig_cls?, conf?, confirmed?}]}` |
+| `POST /api/recalc` | `{scan_id?, items}`: gửi nguyên item của `/scan` (sửa `cls`/`source`/`grams`). Mọi trường khác (`id`, `polygons`, `needs_confirm`, `suggestions`...) được trả lại y nguyên; `region_id` mặc định = `id` (trừ món thêm tay) |
 | `POST /api/meals` | cần `X-Device-Id`. `{scan_id?, items, eaten_at, share_corrections}` → `201 {meal_id, total, correction_saved}` |
-| `GET /api/meals?date=YYYY-MM-DD` | bữa trong ngày + `total_kcal`, `daily_pct` |
+| `GET /api/meals?date=YYYY-MM-DD` | bữa trong ngày; mỗi bữa có `total{grams,kcal}` và item có `needs_confirm`; cả ngày có `total{kcal,daily_pct}` (kèm `total_kcal`, `daily_pct` cũ) |
 | `DELETE /api/meals/{id}` | 204; xoá luôn ảnh đã góp (nếu có) |
 | `GET /api/classes` | 45 món: `cls, name, kcal_per_100g, default_g, source, suggestions` |
-| `GET /api/benchmark` | `models/benchmark.json` (sinh bằng `python tools/build_benchmark_json.py`) |
+| `GET /api/benchmark` | `models/benchmark.json` (sinh bằng `python tools/build_benchmark_json.py`): có các trường trang Benchmark của frontend đọc (`metrics`, `comparisons`, `ap`, `confusions`, `sample`, `source`) |
 | `GET /api/health` | 200 khi sẵn sàng, 503 khi đang nạp / lỗi |
 
 **Cách `/api/recalc` (và `/api/meals`) tính gram cho từng item:**
@@ -57,7 +57,8 @@ Test (SQLite + mock, không cần MySQL/GPU): `python -m pytest backend/tests -q
 3. `model` / `renamed` → công thức của món (cuối cùng) trên `area_ratio` của vùng; không có `area_ratio` (không thấy đĩa) → khẩu phần TB.
    Cơm lấy thể tích từ lần quét nếu đã bật độ sâu.
 
-kcal luôn do backend tính lại (`gram × kcal/100 g ÷ 100`), không tin số frontend gửi.
+kcal luôn do backend tính lại (`gram đã làm tròn × kcal/100 g ÷ 100`, giống pipeline), không tin số frontend gửi.
+`source` mặc định `model`; `confirmed` bỏ trống thì suy ra từ `needs_confirm`.
 
 **Luồng frontend gợi ý:** scan → giữ `items` (kèm `id` → gửi lại là `region_id`, `area_ratio`, `conf`) → mỗi lần sửa gọi
 `/recalc` với toàn bộ danh sách → lưu bằng `/meals` với danh sách cuối.

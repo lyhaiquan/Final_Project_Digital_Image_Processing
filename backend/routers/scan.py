@@ -49,6 +49,8 @@ async def scan(
     res = await ctx.inference.analyze(bgr, flag_conf, depth)
     if blurry:
         res["warnings"].append("blurry")
+    for it in res["items"]:
+        it.setdefault("source", "model")
 
     scan_id = str(uuid.uuid4())
     path = s.tmp_dir / f"{scan_id}.jpg"  # ảnh đã xoay EXIF, khớp toạ độ polygons; tự xoá sau 24 giờ (QT-09)

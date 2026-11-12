@@ -63,15 +63,20 @@ def list_meals(ctx: CtxDep, db: DbDep, device: DeviceDep,
     start = _to_utc(datetime.combine(day, time.min, tz), tz)
     meals = db.scalars(select(Meal).where(Meal.device_id == device, Meal.eaten_at >= start,
                                           Meal.eaten_at < start + timedelta(days=1)).order_by(Meal.eaten_at)).all()
+    s = ctx.settings
+
+    def tot(g: int, k: int) -> dict:
+        return dict(grams=g, kcal=k, error_pct=s.error_pct, daily_pct=round(100 * k / s.daily_kcal))
+
     out = []
     for m in meals:
         out.append(dict(
-            meal_id=m.meal_id, total_g=m.total_g, total_kcal=m.total_kcal, model_version=m.model_version,
-            eaten_at=m.eaten_at.replace(tzinfo=timezone.utc).astimezone(tz),
+            meal_id=m.meal_id, total_g=m.total_g, total_kcal=m.total_kcal, total=tot(m.total_g, m.total_kcal),
+            model_version=m.model_version, eaten_at=m.eaten_at.replace(tzinfo=timezone.utc).astimezone(tz),
             items=[dict(cls=i.cls, name=ctx.catalog.name(i.cls), grams=i.grams, kcal=i.kcal, source=i.source,
-                        orig_cls=i.orig_cls, confirmed=i.confirmed) for i in m.items]))
-    k = sum(m.total_kcal for m in meals)
-    return dict(date=day, meals=out, total_kcal=k, daily_pct=round(100 * k / ctx.settings.daily_kcal))
+                        orig_cls=i.orig_cls, confirmed=i.confirmed, needs_confirm=not i.confirmed) for i in m.items]))
+    day_tot = tot(sum(m.total_g for m in meals), sum(m.total_kcal for m in meals))
+    return dict(date=day, meals=out, total_kcal=day_tot["kcal"], daily_pct=day_tot["daily_pct"], total=day_tot)
 
 
 @router.delete("/{meal_id}", status_code=204, responses={404: {"model": Error}}, summary="Xoá bữa ăn")

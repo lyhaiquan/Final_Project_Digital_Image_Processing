@@ -31,9 +31,11 @@ def recalc(cat: Catalog, items: list[ItemIn], rice_volume: float | None = None) 
             g, how = cat.default_g(it.cls), ("rice_mean" if it.cls == "rice" else "class_mean")
         else:
             g, how = cat.grams(it.cls, it.area_ratio, rice_volume)
-        d = it.model_dump()
+        d = it.model_dump()  # gồm cả trường thêm (polygons, suggestions...) để trả lại cho frontend
         d.update(name=cat.name(it.cls), grams=g, kcal=cat.kcal(it.cls, g), gram_method=how)
-        if it.source == "manual":
-            d["region_id"] = None
+        # vùng trên ảnh: món thêm tay không có; còn lại mặc định trùng id của món trong kết quả quét
+        d["region_id"] = None if it.source == "manual" else (it.region_id if it.region_id is not None else it.id)
+        if it.confirmed is None:
+            d["confirmed"] = not bool(it.needs_confirm)
         out.append(d)
     return out

@@ -75,6 +75,8 @@ Máy có GPU thì `GPU: True`, máy chỉ có CPU thì `GPU: False`. Cả hai đ
 
 ## 2. Chạy thử
 
+> **Chạy cả web app (backend + MySQL + frontend) với mô hình thật:** xem [docs/HUONG_DAN_TEST.md](docs/HUONG_DAN_TEST.md).
+
 ### Giao diện web (chưa cần backend)
 
 Frontend chạy độc lập với dữ liệu mẫu, gồm quét ảnh, chỉnh món/gram, nhật ký, bảng calo và benchmark:

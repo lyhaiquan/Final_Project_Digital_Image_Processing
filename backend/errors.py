@@ -35,7 +35,7 @@ class ApiError(Exception):
 
 
 def _body(code: str, message: str, **extra) -> dict:
-    return {"error": code, "message": message, **extra}
+    return {"error": code, "code": code, "message": message, **extra}
 
 
 def install(app: FastAPI) -> None:

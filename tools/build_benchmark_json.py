@@ -67,8 +67,31 @@ def main():
         gram_methods=[dict(method=m, label=label.get(m, m), item_mae_g=r(a), tray_mae_g=r(b))
                       for m, a, b in gs[["method", "test_MAE_g", "test_tray_MAE_g"]].values],
         per_class_ap=per_class,
-        confusions=[dict(true=t, true_name=name.get(t, t), pred=p, pred_name=name.get(p, p), count=int(n))
+        confusion_pairs=[dict(true=t, true_name=name.get(t, t), pred=p, pred_name=name.get(p, p), count=int(n))
                     for (t, p), n in pairs.items()],
+    )
+    # --- các trường trang Benchmark của frontend đọc (frontend/src/main.js); cấu hình mặc định server: DINOv2, tắt độ sâu
+    def vn(x, d=1):
+        return f"{x:.{d}f}".replace(".", ",")
+
+    mask = seg.test_mask_mAP50_95 * 100
+    new = "mới (+DINOv2)"
+    out.update(
+        source="docs/results/*.csv, research/improve/result_pipeline.csv (tools/build_benchmark_json.py)",
+        sample=f"{cf.image.nunique()} ảnh kiểm thử",
+        metrics=[
+            dict(label="Mask mAP50–95", value=f"{vn(mask.mean())}%", detail=f"± {vn(mask.std(ddof=1))} điểm % · {len(seg)} seed"),
+            dict(label="F1 danh sách món", value=f"{vn(pipe.loc['cặp F1 %', new])}%", detail="YOLO + DINOv2"),
+            dict(label="Sai số mỗi món", value=f"{vn(pipe.loc['MAE món (g)', new])} g", detail="MAE · không bật độ sâu"),
+            dict(label="Sai số calo / khay", value=f"{round(pipe.loc['MAE kcal khay', new])} kcal", detail="MAE · không bật độ sâu"),
+        ],
+        comparisons=[dict(label=lab, before=r(pipe.loc[k, "cũ (chỉ YOLO)"]), after=r(pipe.loc[k, new]), better=bt)
+                     for lab, k, bt in (("F1 danh sách món (%)", "cặp F1 %", "cao hơn tốt hơn"),
+                                        ("Vùng món bị bỏ sót", "vùng sót", "thấp hơn tốt hơn"),
+                                        ("Sai số gram / món", "MAE món (g)", "thấp hơn tốt hơn"),
+                                        ("Sai số kcal / khay", "MAE kcal khay", "thấp hơn tốt hơn"))],
+        ap=[dict(cls=c, value=r(v * 100)) for c, v in ap[["lop", "full_s1"]].values],  # trang ghi "model seed 1"
+        confusions=json.load(open(os.path.join(ROOT, "models", "gram_model.json"), encoding="utf-8"))["confusions"],
     )
     dst = os.path.join(ROOT, "models", "benchmark.json")
     with open(dst, "w", encoding="utf-8") as f:

@@ -329,6 +329,7 @@ class CaloKhay:
             area_px = int(e["mask"].sum())
             A = area_px / plate_px if plate_px else None
             g, how = self.grams(cls, A, V if cls == "rice" else None)
+            g = round(g)  # kcal tính từ gram đã làm tròn -> khớp với số hiển thị và với /api/recalc
             items.append(dict(
                 id=i + 1, cls=cls, name=self.name_vi.get(cls, cls), conf=round(e["conf"], 3),
                 needs_confirm=e["conf"] < flag_conf,

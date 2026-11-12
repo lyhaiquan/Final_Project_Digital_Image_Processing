@@ -4,13 +4,14 @@ from __future__ import annotations
 from datetime import date, datetime
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 Source = Literal["model", "renamed", "manual"]
 
 
 class Error(BaseModel):
     error: str = Field(description="mã lỗi, vd. image_too_small (bảng 2.6)")
+    code: str = Field(description="trùng với `error` (frontend đọc trường này)")
     message: str = Field(description="câu thông báo tiếng Việt, frontend có thể hiện thẳng")
 
 
@@ -36,6 +37,7 @@ class ScanItem(BaseModel):
     gram_method: str = Field(description="area | rice_mean | rice_depth | class_mean")
     kcal: int = Field(description="kcal ước lượng")
     polygons: list[list[list[int]]] = Field(description="viền món [[[x, y], ...], ...] theo pixel ảnh đã xoay EXIF")
+    source: Source = Field("model", description="luôn là model ở kết quả quét")
 
 
 class ImageSize(BaseModel):
@@ -66,22 +68,30 @@ class FoodClass(BaseModel):
 
 # ------------------------------------------------------------------ /api/recalc
 class ItemIn(BaseModel):
-    region_id: int | None = Field(None, description="id của món trong kết quả quét; null nếu thêm tay")
+    """Món gửi lên khi sửa / lưu. Có thể gửi nguyên item của /api/scan: các trường khác (polygons, needs_confirm,
+    suggestions...) được trả lại y nguyên để frontend giữ tương tác trên ảnh."""
+    model_config = ConfigDict(extra="allow")
+
+    id: int | None = Field(None, description="id của món trong kết quả quét (hoặc id frontend tự đặt cho món thêm tay)")
+    region_id: int | None = Field(None, description="id vùng trên ảnh; bỏ trống = lấy theo `id` (trừ món thêm tay)")
     cls: str = Field(description="mã món cuối cùng")
-    source: Source = Field(description="model = giữ nguyên, renamed = đã đổi món, manual = thêm tay")
+    source: Source = Field("model", description="model = giữ nguyên, renamed = đã đổi món, manual = thêm tay")
     area_ratio: float | None = Field(None, ge=0, description="lấy từ kết quả quét; dùng để tính lại gram khi đổi món")
-    grams: int | None = Field(None, ge=1, le=2000,
+    grams: int | None = Field(None, ge=0, le=2000,
                               description="gram người ăn chọn (suất cơm 150/227/300, chỉnh tay 10-1000); "
                                           "bỏ trống = backend tự tính")
     orig_cls: str | None = Field(None, description="mã món mô hình đoán ban đầu (khi renamed)")
     conf: float | None = Field(None, description="độ tin cậy gốc")
-    confirmed: bool = Field(True, description="false = món cần xác nhận mà người ăn bỏ qua")
+    needs_confirm: bool | None = Field(None, description="món còn chờ xác nhận")
+    confirmed: bool | None = Field(None, description="false = món cần xác nhận mà người ăn bỏ qua; "
+                                                     "bỏ trống = suy ra từ needs_confirm")
 
 
 class ItemOut(ItemIn):
     name: str
     grams: int
     kcal: int
+    confirmed: bool
     gram_method: str = Field(description="area | rice_mean | rice_depth | class_mean | user")
 
 
@@ -117,6 +127,7 @@ class MealItemOut(BaseModel):
     source: Source
     orig_cls: str | None
     confirmed: bool
+    needs_confirm: bool = Field(description="= not confirmed")
 
 
 class MealOut(BaseModel):
@@ -124,6 +135,7 @@ class MealOut(BaseModel):
     eaten_at: datetime = Field(description="theo giờ Việt Nam (+07:00)")
     total_g: int
     total_kcal: int
+    total: Total = Field(description="tổng của bữa (trùng total_g, total_kcal)")
     model_version: str | None
     items: list[MealItemOut]
 
@@ -133,6 +145,7 @@ class DayMeals(BaseModel):
     meals: list[MealOut]
     total_kcal: int
     daily_pct: int = Field(description="% so với 2.000 kcal")
+    total: Total = Field(description="tổng cả ngày (trùng total_kcal, daily_pct)")
 
 
 # ------------------------------------------------------------------ /api/health
