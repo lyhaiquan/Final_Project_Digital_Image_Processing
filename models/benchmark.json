@@ -1,0 +1,335 @@
+{
+ "model": "food_seg_v4_final + DINOv2",
+ "headline": {
+  "mask_map50_95": 0.566,
+  "item_mae_g": 26.5,
+  "tray_mae_g": 88.9,
+  "tray_kcal_medape_pct": 27.2
+ },
+ "depth": {
+  "off": {
+   "item_mae_g": 26.8,
+   "rice_mae_g": 68.4,
+   "tray_mae_g": 112.9
+  },
+  "on": {
+   "item_mae_g": 23.8,
+   "rice_mae_g": 53.8,
+   "tray_mae_g": 82.8
+  }
+ },
+ "improvements": [
+  {
+   "metric": "vùng đúng",
+   "yolo": 261.0,
+   "dino": 273.0,
+   "yolo_depth": 261.0,
+   "dino_depth": 273.0
+  },
+  {
+   "metric": "vùng nhầm",
+   "yolo": 80.0,
+   "dino": 76.0,
+   "yolo_depth": 80.0,
+   "dino_depth": 76.0
+  },
+  {
+   "metric": "vùng sót",
+   "yolo": 41.0,
+   "dino": 33.0,
+   "yolo_depth": 41.0,
+   "dino_depth": 33.0
+  },
+  {
+   "metric": "cặp F1 %",
+   "yolo": 79.5,
+   "dino": 84.5,
+   "yolo_depth": 79.5,
+   "dino_depth": 84.5
+  },
+  {
+   "metric": "món ma (cặp)",
+   "yolo": 40.0,
+   "dino": 33.0,
+   "yolo_depth": 40.0,
+   "dino_depth": 33.0
+  },
+  {
+   "metric": "cần xác nhận %",
+   "yolo": 13.7,
+   "dino": 25.2,
+   "yolo_depth": 13.7,
+   "dino_depth": 25.2
+  },
+  {
+   "metric": "lỗi được gắn cờ %",
+   "yolo": 32.5,
+   "dino": 57.6,
+   "yolo_depth": 32.5,
+   "dino_depth": 57.6
+  },
+  {
+   "metric": "lỗi lọt (không cờ)",
+   "yolo": 27.0,
+   "dino": 14.0,
+   "yolo_depth": 27.0,
+   "dino_depth": 14.0
+  },
+  {
+   "metric": "cặp cân bị sót",
+   "yolo": 41.0,
+   "dino": 29.0,
+   "yolo_depth": 41.0,
+   "dino_depth": 29.0
+  },
+  {
+   "metric": "cặp ma (ảnh có cân)",
+   "yolo": 36.0,
+   "dino": 29.0,
+   "yolo_depth": 36.0,
+   "dino_depth": 29.0
+  },
+  {
+   "metric": "MAE món (g)",
+   "yolo": 26.8,
+   "dino": 26.5,
+   "yolo_depth": 23.8,
+   "dino_depth": 24.5
+  },
+  {
+   "metric": "MAE gram khay",
+   "yolo": 91.4,
+   "dino": 88.9,
+   "yolo_depth": 72.0,
+   "dino_depth": 73.2
+  },
+  {
+   "metric": "lệch gram khay",
+   "yolo": 7.5,
+   "dino": 13.7,
+   "yolo_depth": 18.4,
+   "dino_depth": 28.2
+  },
+  {
+   "metric": "MAE kcal khay",
+   "yolo": 122.2,
+   "dino": 111.2,
+   "yolo_depth": 108.5,
+   "dino_depth": 98.5
+  },
+  {
+   "metric": "medAPE kcal khay %",
+   "yolo": 27.7,
+   "dino": 27.2,
+   "yolo_depth": 24.1,
+   "dino_depth": 19.4
+  },
+  {
+   "metric": "lệch kcal khay",
+   "yolo": 44.6,
+   "dino": 36.8,
+   "yolo_depth": 59.0,
+   "dino_depth": 55.9
+  }
+ ],
+ "gram_methods": [
+  {
+   "method": "mean",
+   "label": "khẩu phần trung bình (mốc)",
+   "item_mae_g": 35.8,
+   "tray_mae_g": 111.0
+  },
+  {
+   "method": "ratio",
+   "label": "tỉ lệ diện tích",
+   "item_mae_g": 48.2,
+   "tray_mae_g": 140.3
+  },
+  {
+   "method": "loglog",
+   "label": "log-log diện tích/đĩa",
+   "item_mae_g": 28.5,
+   "tray_mae_g": 117.8
+  },
+  {
+   "method": "hybrid",
+   "label": "kết hợp",
+   "item_mae_g": 27.0,
+   "tray_mae_g": 114.7
+  }
+ ],
+ "per_class_ap": [
+  {
+   "cls": "braised_egg",
+   "name": "trứng kho",
+   "ap": 0.979
+  },
+  {
+   "cls": "sausage",
+   "name": "xúc xích",
+   "ap": 0.962
+  },
+  {
+   "cls": "boiled_egg",
+   "name": "trứng luộc",
+   "ap": 0.946
+  },
+  {
+   "cls": "cutlet",
+   "name": "thịt lợn chiên",
+   "ap": 0.882
+  },
+  {
+   "cls": "radish",
+   "name": "củ cải",
+   "ap": 0.834
+  },
+  {
+   "cls": "bean_sprouts_green_beans",
+   "name": "giá xào đậu que",
+   "ap": 0.749
+  },
+  {
+   "cls": "shrimp_spring_roll",
+   "name": "nem / chả giò tôm",
+   "ap": 0.744
+  },
+  {
+   "cls": "fried_tofu",
+   "name": "đậu phụ rán",
+   "ap": 0.737
+  },
+  {
+   "cls": "water_spinach",
+   "name": "rau muống",
+   "ap": 0.689
+  },
+  {
+   "cls": "silkworm_pupae",
+   "name": "nhộng",
+   "ap": 0.559
+  },
+  {
+   "cls": "boiled_pork",
+   "name": "thịt luộc",
+   "ap": 0.526
+  },
+  {
+   "cls": "pork_floss",
+   "name": "ruốc / chà bông",
+   "ap": 0.463
+  },
+  {
+   "cls": "chayote",
+   "name": "su su",
+   "ap": 0.45
+  },
+  {
+   "cls": "fish_ball",
+   "name": "cá viên",
+   "ap": 0.431
+  },
+  {
+   "cls": "pork_broccoli",
+   "name": "thịt xào súp lơ",
+   "ap": 0.362
+  },
+  {
+   "cls": "rice",
+   "name": "cơm trắng",
+   "ap": 0.346
+  },
+  {
+   "cls": "coconut_braised_pork",
+   "name": "thịt kho (nước dừa)",
+   "ap": 0.307
+  },
+  {
+   "cls": "bell_pepper_chicken",
+   "name": "gà xào ớt chuông",
+   "ap": 0.195
+  },
+  {
+   "cls": "potato",
+   "name": "khoai tây",
+   "ap": 0.129
+  },
+  {
+   "cls": "sweet_sour_chicken",
+   "name": "gà sốt chua ngọt",
+   "ap": 0.031
+  }
+ ],
+ "confusions": [
+  {
+   "true": "rice",
+   "true_name": "cơm trắng",
+   "pred": "pork_floss",
+   "pred_name": "ruốc / chà bông",
+   "count": 12
+  },
+  {
+   "true": "fish_ball",
+   "true_name": "cá viên",
+   "pred": "braised_egg",
+   "pred_name": "trứng kho",
+   "count": 7
+  },
+  {
+   "true": "chayote",
+   "true_name": "su su",
+   "pred": "cabbage",
+   "pred_name": "bắp cải luộc",
+   "count": 5
+  },
+  {
+   "true": "water_spinach",
+   "true_name": "rau muống",
+   "pred": "leafy_greens",
+   "pred_name": "rau xanh",
+   "count": 5
+  },
+  {
+   "true": "sweet_sour_chicken",
+   "true_name": "gà sốt chua ngọt",
+   "pred": "fried_chicken",
+   "pred_name": "gà rán",
+   "count": 5
+  },
+  {
+   "true": "pork_floss",
+   "true_name": "ruốc / chà bông",
+   "pred": "rice",
+   "pred_name": "cơm trắng",
+   "count": 4
+  },
+  {
+   "true": "fish_ball",
+   "true_name": "cá viên",
+   "pred": "fried_egg",
+   "pred_name": "trứng rán",
+   "count": 4
+  },
+  {
+   "true": "rice",
+   "true_name": "cơm trắng",
+   "pred": "boiled_pork",
+   "pred_name": "thịt luộc",
+   "count": 4
+  },
+  {
+   "true": "rice",
+   "true_name": "cơm trắng",
+   "pred": "potato",
+   "pred_name": "khoai tây",
+   "count": 4
+  },
+  {
+   "true": "rice",
+   "true_name": "cơm trắng",
+   "pred": "pork_broccoli",
+   "pred_name": "thịt xào súp lơ",
+   "count": 3
+  }
+ ]
+}

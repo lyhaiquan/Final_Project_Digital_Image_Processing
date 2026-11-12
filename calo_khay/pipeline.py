@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import json
 import os
+import time
 
 import cv2
 import numpy as np
@@ -194,6 +195,18 @@ def _loglog(m: dict, cls: str, x: float) -> float:
     return float(np.exp(a + m["slope"] * np.log(max(x, 1e-6))) * m["smearing"])
 
 
+def estimate_grams(gm: dict, cls: str, A: float | None, V: float | None = None) -> tuple[float, str]:
+    """Công thức gram (QT-03, QT-04) tách khỏi CaloKhay để backend tính lại mà không cần nạp model.
+    gm: nội dung gram_model.json. Trả về (gram, cách tính)."""
+    if cls == "rice":
+        if V is not None and V > 0:
+            return _loglog(gm["rice_depth"], "rice", V), "rice_depth"
+        return gm["rice_mean_g"], "rice_mean"
+    if A is None:  # không thấy đĩa -> khẩu phần TB của món
+        return gm["class_mean_g"].get(cls, gm["global_mean_g"]), "class_mean"
+    return _loglog(gm["area"], cls, A), "area"
+
+
 class CaloKhay:
     def __init__(self, use_depth: bool = False, device: str | None = None, models_dir: str = MODELS, use_dino: bool = True):
         from ultralytics import YOLO, YOLOE
@@ -227,19 +240,16 @@ class CaloKhay:
 
     def grams(self, cls: str, A: float | None, V: float | None = None) -> tuple[float, str]:
         """Trả về (gram, cách tính)."""
-        gm = self.gm
-        if cls == "rice":
-            if V is not None and V > 0:
-                return _loglog(gm["rice_depth"], "rice", V), "rice_depth"
-            return gm["rice_mean_g"], "rice_mean"
-        if A is None:  # không thấy đĩa -> khẩu phần TB của món
-            return gm["class_mean_g"].get(cls, gm["global_mean_g"]), "class_mean"
-        return _loglog(gm["area"], cls, A), "area"
+        return estimate_grams(self.gm, cls, A, V)
 
-    def analyze(self, image, flag_conf: float | None = None) -> dict:
-        """flag_conf: món có độ tin cậy dưới ngưỡng này -> needs_confirm. None = mặc định (0.75 khi có DINO, 0.5 khi không)."""
+    def analyze(self, image, flag_conf: float | None = None, use_depth: bool | None = None) -> dict:
+        """flag_conf: món có độ tin cậy dưới ngưỡng này -> needs_confirm. None = mặc định (0.75 khi có DINO, 0.5 khi không).
+        use_depth: bật/tắt độ sâu cho riêng lần này; None = theo lúc khởi tạo. Chỉ bật được khi đã nạp model độ sâu."""
         if flag_conf is None:
             flag_conf = FLAG_DINO if self.use_dino else FLAG_YOLO
+        use_depth = self.use_depth if use_depth is None else (use_depth and self.use_depth)
+        timing = {}
+        t0 = time.perf_counter()
         bgr = cv2.imread(image) if isinstance(image, str) else image
         if bgr is None:
             raise FileNotFoundError(image)
@@ -271,6 +281,7 @@ class CaloKhay:
                     dets.append(dict(cls=self.seg.names[int(c)], conf=float(cf), mask=mk, polys=mask_polygons(mk), alt=[]))
         if not dets:
             warnings.append("no_food")
+        timing["segment"] = time.perf_counter() - t0; t0 = time.perf_counter()
         food = np.zeros((H, W), bool)
         for d in dets:
             food |= d["mask"]
@@ -287,6 +298,7 @@ class CaloKhay:
             exposed = plates[k]
         else:
             warnings.append("no_plate")
+        timing["plate"] = time.perf_counter() - t0; t0 = time.perf_counter()
 
         # gộp theo món (mỗi món một dòng)
         by_cls: dict[str, dict] = {}
@@ -298,7 +310,7 @@ class CaloKhay:
 
         # 3) độ sâu cho cơm
         V = None
-        if self.use_depth and "rice" in by_cls and exposed is not None:
+        if use_depth and "rice" in by_cls and exposed is not None:
             d = self._depth(bgr)
             ring = cv2.erode(exposed.astype(np.uint8), np.ones((9, 9), np.uint8)) > 0
             plane = fit_plane(d, ring)
@@ -309,6 +321,7 @@ class CaloKhay:
                 spread = float(np.percentile(d[hull], 95) - np.percentile(d[hull], 5)) + 1e-6
                 h = (d - plane) / spread
                 V = float(np.clip(h[by_cls["rice"]["mask"]], 0, None).sum()) / plate_px
+        timing["depth"] = time.perf_counter() - t0; t0 = time.perf_counter()
 
         # 4) gram, kcal
         items = []
@@ -325,7 +338,9 @@ class CaloKhay:
                 grams=round(g), gram_method=how, kcal=round(g * self.kcal100.get(cls, 0) / 100),
                 polygons=e["polygons"]))
         tg, tk = sum(i["grams"] for i in items), sum(i["kcal"] for i in items)
+        timing["grams"] = time.perf_counter() - t0
         return dict(
+            timing_ms={k: round(v * 1000) for k, v in timing.items()},
             image=dict(w=W, h=H), plate_found=plate_px is not None,
             plate_px=None if plate_px is None else round(plate_px), plate_ellipse=ellipse is not None,
             rice_volume=V, items=items,

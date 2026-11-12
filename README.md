@@ -163,6 +163,8 @@ Cấu trúc JSON trả về:
 }
 ```
 
+Ngoài ra có `timing_ms` (thời gian từng bước, ms). Backend FastAPI bọc pipeline này: xem [backend/README.md](backend/README.md).
+
 Khi người dùng đổi tên món, kcal tính lại bằng: `kcal = grams × kcal_per_100g / 100`, với `kcal_per_100g` lấy từ `models/calories.csv`.
 
 ---

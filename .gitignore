@@ -19,3 +19,7 @@ yoloe-11*.pt
 .idea/
 .DS_Store
 Thumbs.db
+
+# backend
+.env
+data/
