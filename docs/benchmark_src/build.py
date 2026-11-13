@@ -113,6 +113,64 @@ gs = pd.read_csv(r"D:/food-labeling/grams_out/summary.csv").set_index(["mask", "
 gt_upper = gs.loc[("GT-dia", "hybrid"), "test_MAE_g"]
 print("spearman pred", sp_pred, "gt", sp_gt, "gt upper", gt_upper)
 
+# ---------- Bảng VI-VII: cải tiến sau huấn luyện (research/improve) ----------
+IMP = r"D:/CVision/Final_Project_Digital_Image_Processing/research/improve"
+pp = pd.read_csv(f"{IMP}/result_pipeline.csv", index_col=0); ppd = pd.read_csv(f"{IMP}/result_pipeline_depth.csv", index_col=0)
+rec = pd.read_csv(f"{IMP}/result_recognition.csv").set_index(["tap", "cach"])
+dsm = pd.read_csv(f"{IMP}/result_downstream.csv"); mg = pd.read_csv(f"{IMP}/result_merge_test.csv")
+rg = pd.read_csv(f"{IMP}/result_gram_ridge.csv").set_index("cach")
+de = pd.read_csv(r"D:/food-labeling/grams_out/depth_eval.csv").set_index(["model", "cach"])
+YO, DN = pp.columns
+n_reg = int(pp.loc["vùng đúng"].iloc[0] + pp.loc["vùng nhầm"].iloc[0] + pp.loc["vùng sót"].iloc[0])
+def pr(d, k, f="{:.0f}"): return [f.format(d.loc[k, YO]), f.format(d.loc[k, DN])]
+t6 = [["Vùng nhận đúng"] + [f"{pp.loc['vùng đúng', c]:.0f} ({100 * pp.loc['vùng đúng', c] / n_reg:.1f}%)" for c in (YO, DN)],
+      ["Vùng nhầm / bỏ sót"] + [f"{pp.loc['vùng nhầm', c]:.0f} / {pp.loc['vùng sót', c]:.0f}" for c in (YO, DN)],
+      ["F1 danh sách món (%)"] + pr(pp, "cặp F1 %", "{:.1f}"),
+      ["Món “ma” (cặp ảnh–món)"] + pr(pp, "món ma (cặp)"),
+      ["Món được hỏi lại (%)"] + pr(pp, "cần xác nhận %", "{:.1f}"),
+      ["Món sai không được hỏi lại"] + pr(pp, "lỗi lọt (không cờ)")]
+for d in (pp, ppd):
+    t6 += [["MAE gram món (g)"] + pr(d, "MAE món (g)", "{:.1f}"), ["MAE gram khay (g)"] + pr(d, "MAE gram khay", "{:.1f}"),
+           ["MAE kcal khay"] + pr(d, "MAE kcal khay", "{:.1f}"), ["Trung vị sai số kcal khay (%)"] + pr(d, "medAPE kcal khay %", "{:.1f}")]
+seed_rows = [r for r in rec.loc["test"].index if r.strip().startswith("full") and "YOLO" in r]
+seeds = "; ".join(rec.loc[("test", r), "dung"].replace("->", " → ") for r in seed_rows)
+r_te = lambda k: rec.loc[("test", k)]
+# Bảng VII
+def kc(model, nhan="DINO+hạ ngưỡng", gram="cũ", com="khẩu phần TB"):
+    q = dsm[(dsm.com == com) & (dsm.nhan_dien == nhan) & (dsm.he_so_gram == gram)]
+    return q[q.model.isin(model)].khay_kcal_MAE.mean()
+three = ["full0", "full1", "full2"]
+k_base, k_ens, k_ridge = kc(three), kc(["fullE"]), kc(three, gram="ridge")
+sys.path.insert(0, r"D:/food-labeling/improve")
+import common as CM
+tta = np.mean([CM.score("val", f"tr{i}F")["dung"] for i in range(3)]), np.mean([CM.score("val", f"tr{i}T")["dung"] for i in range(3)])
+val_base = float(rec.loc[("val", "YOLO (TB 3 seed)"), "dung"])
+mgm = mg.groupby("cach", sort=False)[["vung_dung", "khay_kcal_MAE"]].mean()
+ridge_best = rg.drop(index=[i for i in rg.index if "nhóm" in i]).cv_MAE.idxmin()
+t7 = [["TTA (lật ngang, ảnh 800 px)", f"Val: vùng đúng {tta[0]:.0f} / {tta[1]:.0f} so với {val_base:.0f}", "Không cải thiện"],
+      ["Gộp 3 seed", f"Test: vùng đúng {float(r_te('gộp 3 seed + DINO + hạ ngưỡng')['dung']):.0f} so với {float(r_te('+ DINO + hạ ngưỡng (TB 3 seed)')['dung']):.0f}; kcal khay {k_ens:.0f} so với {k_base:.0f}",
+       "Tốn 3× YOLO, calo không tốt hơn"],
+      [f"Co hệ số gram (ridge, {ridge_best.replace('ridge ', '').replace('lam', 'λ')} theo CV)",
+       f"CV: MAE món khác cơm {rg.loc['hiện tại (<3 khay -> chung)', 'cv_MAE']:.1f} → {rg.loc[ridge_best, 'cv_MAE']:.1f} g; test: kcal khay {k_base:.0f} → {k_ridge:.0f}", "Calo tổng khay tệ hơn"],
+      ["Gộp 4 cặp món gần giống", f"Vùng đúng (mức nhóm) {mgm.loc['không gộp, chấm theo nhóm A', 'vung_dung']:.0f} → {mgm.loc['A (4 cặp, kcal gần)', 'vung_dung']:.0f}; kcal khay {mgm.loc['không gộp', 'khay_kcal_MAE']:.0f} → {mgm.loc['A (4 cặp, kcal gần)', 'khay_kcal_MAE']:.0f}",
+       "Chỉ đổi cách chấm, không nhận tốt hơn"],
+      ["Độ sâu cho món khác cơm", f"CV: MAE món khác cơm {de.loc[('L', 'area'), 'cv_MAE_tru_com']:.1f} → {de.loc[('L', 'both_spread'), 'cv_MAE_tru_com']:.1f} g", "Không giúp"]]
+# độ phủ của "±30%" (phần dư CV và test, món nhận đúng; như research/improve/interval.py)
+import depth_eval_pred as DP
+cov = {}
+fi = DP.it.merge(DP.F[["image", "class", "area_px", "hsum_spread"]], on=["image", "class"], how="left")
+fi["hit"] = fi.area_px.notna(); fi["A"] = fi.area_px / fi.image.map(pl.plate_px); fi["V"] = fi.hsum_spread / fi.image.map(pl.plate_px)
+fsi, tei = fi[fi.split != "test"], fi[fi.split == "test"]
+for rv in (False, True):
+    cvi = pd.concat([fsi[fsi.group == g].assign(p=DP.hyb(fsi[fsi.group != g], fsi[fsi.group == g], rv)) for g in sorted(fsi.group.unique())])
+    for nm, dd in (("cv", cvi), ("te", tei.assign(p=DP.hyb(fsi, tei, rv)))):
+        dd = dd[dd.hit & dd.p.notna()]; x = (dd.grams / dd.p - 1).abs(); r = dd["class"] == "rice"
+        if not rv:
+            cov[f"nr30_{nm}"], cov[f"nr50_{nm}"] = 100 * (x[~r] <= .3).mean(), 100 * (x[~r] <= .5).mean()
+        else:
+            cov[f"rd30_{nm}"] = 100 * (x[r] <= .3).mean()
+print("cov", {k: round(v) for k, v in cov.items()}, "tta", tta)
+
 # ---------- Hình 1 ----------
 im = cv2.imread(f"{K}/out_depth/vis/B_005_h.jpg"); im = cv2.resize(im, (1200, int(im.shape[0] * 1200 / im.shape[1])))
 cv2.imwrite(f"{OUT}/fig_depth.jpg", im, [cv2.IMWRITE_JPEG_QUALITY, 85])
@@ -138,6 +196,9 @@ rows4 = []
 for k, name in (("MAE", "MAE món (g)"), ("medAPE", "Trung vị sai số món (%)"), ("tru_com", "MAE món khác cơm (g)"),
                 ("com", "MAE cơm (g)"), ("khay", "MAE tổng khay (g)"), ("khay_pct", "Trung vị sai số khay (%)")):
     rows4.append([name] + [x for i in range(3) for x in g4(i, k)])
+T6 = tbl(["Chỉ số", "Chỉ YOLO", "+ DINOv2"], t6, groups={0: f"Nhận diện (36 ảnh, {n_reg} vùng nhãn)", 6: "Khối lượng và calo, cơm = khẩu phần TB",
+                                                       10: "Khối lượng và calo, cơm = độ sâu"})
+T7 = tbl(["Hướng thử", "Kết quả", "Lý do bỏ"], t7).replace("<table>", '<table class="wrap">')
 T4 = ("<table><thead><tr><th rowspan=2>Chỉ số</th><th colspan=2>Mốc TB</th><th colspan=2>Diện tích</th><th colspan=2>DT + độ sâu</th></tr>"
       "<tr><th>CV</th><th>Test</th><th>CV</th><th>Test</th><th>CV</th><th>Test</th></tr></thead><tbody>"
       + "".join("<tr>" + "".join(f"<td>{x}</td>" for x in rw) + "</tr>" for rw in rows4) + "</tbody></table>")
@@ -156,7 +217,14 @@ D = dict(
     kp1=t4[1][1]["khay_pct"], kp2=t4[2][1]["khay_pct"],
     n_te=n_te, miss_te=miss_te, n_cv=n_cv, miss_cv=miss_cv, gt_upper=gt_upper,
     spA=sp_pred[0], spV=sp_pred[1], spn=sp_pred[2], gA=sp_gt["L"][0], gS=sp_gt["S"][1], gL=sp_gt["L"][1], gn=sp_gt["L"][2],
-    fb=ap.loc["fish_ball"], T1=T1, T2=T2, T2R=T2R, T3=T3, T4=T4)
+    fb=ap.loc["fish_ball"], T1=T1, T2=T2, T2R=T2R, T3=T3, T4=T4, T6=T6, T7=T7,
+    d_ok0=pp.loc["vùng đúng", YO], d_ok1=pp.loc["vùng đúng", DN], d_n=n_reg, d_f0=pp.loc["cặp F1 %", YO], d_f1=pp.loc["cặp F1 %", DN],
+    d_k0=pp.loc["MAE kcal khay", YO], d_k1=pp.loc["MAE kcal khay", DN], d_kd0=ppd.loc["MAE kcal khay", YO], d_kd1=ppd.loc["MAE kcal khay", DN],
+    d_g0=pp.loc["MAE gram khay", YO], d_g1=pp.loc["MAE gram khay", DN], d_l0=pp.loc["lỗi lọt (không cờ)", YO], d_l1=pp.loc["lỗi lọt (không cờ)", DN],
+    d_s0=pp.loc["vùng sót", YO], d_s1=pp.loc["vùng sót", DN], d_q0=pp.loc["cần xác nhận %", YO], d_q1=pp.loc["cần xác nhận %", DN],
+    d_gd0=ppd.loc["MAE gram khay", YO], d_gd1=ppd.loc["MAE gram khay", DN],
+    v_y=float(rec.loc[("val", "YOLO (TB 3 seed)"), "dung"]), v_d=float(rec.loc[("val", "+ DINO + hạ ngưỡng (TB 3 seed)"), "dung"]),
+    t_y=float(r_te("YOLO (TB 3 seed)")["dung"]), t_d=float(r_te("+ DINO + hạ ngưỡng (TB 3 seed)")["dung"]), seeds=seeds, **cov)
 
 import re
 tpl = open(f"{OUT}/template.html", encoding="utf-8").read()

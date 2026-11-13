@@ -200,7 +200,7 @@ Khi người dùng đổi tên món, kcal tính lại bằng: `kcal = grams × k
 │   └── calories.csv         45 món: tên Việt, kcal/100 g, nguồn số liệu
 ├── examples/                ảnh mẫu
 ├── docs/
-│   ├── benchmark_ieee.pdf   báo cáo benchmark (khổ IEEE)
+│   ├── benchmark_ieee.pdf   báo cáo benchmark (khổ IEEE, 3 trang, gồm cả phần DINOv2)
 │   ├── proposal_frontend.pdf thiết kế giao diện web
 │   ├── NGHIEP_VU.md         đặc tả nghiệp vụ backend + frontend (bản PDF: nghiep_vu.pdf)
 │   ├── REPORT_gram.md       ghi chép kết quả ước lượng gram và độ sâu
@@ -241,8 +241,8 @@ Mask mAP50-95 của YOLO: **0.566 ± 0.014** (3 seed). Các chỉ số còn lạ
 DINOv2 cải thiện phần **nhận diện** và **calo**; sai số **gram** gần như không đổi. Cả 3 seed đều cho cùng chiều cải thiện.
 Mốc so sánh cho gram mỗi món: đoán theo khẩu phần trung bình sai 36.0 g.
 
-Tổng khay ở bảng này tính trên mọi món chương trình báo ra, kể cả món "ma". Báo cáo `docs/benchmark_ieee.pdf` dùng cách tính cũ
-(chỉ cộng các món có cân) nên ghi 113 g / 83 g cho cùng model chỉ-YOLO. Chi tiết các thử nghiệm: `research/improve/README.md`.
+Tổng khay ở bảng này tính trên mọi món chương trình báo ra, kể cả món "ma". Báo cáo `docs/benchmark_ieee.pdf` có cả hai cách tính:
+Bảng V chỉ cộng các món có cân (113 g / 83 g cho model chỉ-YOLO), Bảng VI tính như bảng này. Chi tiết các thử nghiệm: `research/improve/README.md`.
 
 **Giới hạn cần biết:**
 - Khoảng 9% vùng món trong test vẫn bị bỏ sót (chỉ YOLO: 11%); khoảng 20% bị nhận nhầm. Các món hay nhầm: gà chua ngọt, cá viên, gà xào ớt chuông, rau muống.

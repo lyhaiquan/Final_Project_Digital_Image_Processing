@@ -20,6 +20,7 @@ h3 { font-size: 10pt; font-weight: normal; font-style: italic; margin: 5pt 0 2pt
 .tab.wide { column-span: all; }
 .cap { font-size: 8pt; text-align: center; font-variant: small-caps; margin-bottom: 3pt; line-height: 1.25; }
 .cap .no { display: block; }
+table.wrap td { white-space: normal; text-align: left; }
 table { border-collapse: collapse; width: 100%; font-size: 7.6pt; line-height: 1.2; }
 th, td { padding: 1.1pt 2pt; text-align: center; white-space: nowrap; }
 td:first-child, td:last-child { white-space: normal; }
@@ -46,8 +47,8 @@ ul.c li { margin: 0 0 1pt; }
 <span class="aff">[Khoa / Trường] — Báo cáo kỹ thuật, 11/2026</span></div>
 
 <div class="cols">
-<p class="abstract"><i>Tóm tắt</i>—Báo cáo trình bày giao thức đánh giá và kết quả tinh chỉnh YOLO26s-seg cho bài toán phân đoạn món ăn trên khay cơm căng tin Việt Nam ([[n_cls]] lớp, [[n_img]] ảnh), kèm bước ước lượng khối lượng (gram) từ mask. Tập test được khóa từ đầu và chia theo nhóm buổi chụp để tránh rò rỉ; mỗi cấu hình được huấn luyện với 3 seed. Model cuối đạt mask mAP<sub>50-95</sub> [[full]] trên test và nhận đúng [[conf_ok]]/[[conf_n]] vùng nhãn. Về khối lượng, chuẩn hóa diện tích theo đĩa (YOLOE) giảm MAE các món khác cơm từ [[nr0|.1f]] g xuống [[nr1|.1f]] g; với cơm, thể tích tương đối từ Depth-Anything-V2 có tương quan dương với gram (Spearman +[[spV|.2f]]) trong khi diện tích tương quan âm, giảm MAE tổng khay trên test từ [[k1|.0f]] g xuống [[k2|.0f]] g.</p>
-<p class="kw"><i>Từ khóa</i>—phân đoạn thực thể, nhận diện món ăn, ước lượng khối lượng, ước lượng độ sâu đơn ảnh, YOLO.</p>
+<p class="abstract"><i>Tóm tắt</i>—Báo cáo trình bày giao thức đánh giá và kết quả tinh chỉnh YOLO26s-seg cho bài toán phân đoạn món ăn trên khay cơm căng tin Việt Nam ([[n_cls]] lớp, [[n_img]] ảnh), kèm bước ước lượng khối lượng (gram) từ mask. Tập test được khóa từ đầu và chia theo nhóm buổi chụp để tránh rò rỉ; mỗi cấu hình được huấn luyện với 3 seed. Model cuối đạt mask mAP<sub>50-95</sub> [[full]] trên test và nhận đúng [[conf_ok]]/[[conf_n]] vùng nhãn. Về khối lượng, chuẩn hóa diện tích theo đĩa (YOLOE) giảm MAE các món khác cơm từ [[nr0|.1f]] g xuống [[nr1|.1f]] g; với cơm, thể tích tương đối từ Depth-Anything-V2 có tương quan dương với gram (Spearman +[[spV|.2f]]) trong khi diện tích tương quan âm, giảm MAE tổng khay trên test từ [[k1|.0f]] g xuống [[k2|.0f]] g. Sau huấn luyện, bước phân loại lại từng vùng bằng đặc trưng DINOv2 (không huấn luyện lại YOLO) nâng số vùng nhận đúng từ [[d_ok0|.0f]] lên [[d_ok1|.0f]]/[[d_n]] và giảm sai số calo tổng khay từ [[d_k0|.0f]] xuống [[d_k1|.0f]] kcal.</p>
+<p class="kw"><i>Từ khóa</i>—phân đoạn thực thể, nhận diện món ăn, ước lượng khối lượng, ước lượng độ sâu đơn ảnh, YOLO, DINOv2.</p>
 
 <h2>I. Giới thiệu</h2>
 <p>Mục tiêu của nhóm là tinh chỉnh mô hình có sẵn và đánh giá nghiêm ngặt trên dữ liệu tự thu thập, không đề xuất kiến trúc mới. Các bộ dữ liệu khay ăn công khai như UNIMIB2016 [4] không có khối lượng từng món; Nutrition5k [5] có khối lượng nhưng ở mức cả đĩa và dùng camera độ sâu. Bộ dữ liệu của nhóm có cân từng món trên khay và chỉ dùng ảnh điện thoại. Báo cáo tập trung vào <i>cách</i> xây benchmark sao cho con số đáng tin, rồi mới đến kết quả.</p>
@@ -70,13 +71,16 @@ ul.c li { margin: 0 0 1pt; }
 <li><i>Phân đoạn:</i> mask/box mAP<sub>50-95</sub> và AP từng lớp (Ultralytics).</li>
 <li><i>Cơm, độc lập cách gán nhãn:</i> IoU vùng cơm và sai số diện tích cơm so với nhãn gốc. Cần thiết vì cấu hình “rice1” gộp các mảnh cơm thành một đa giác, làm thay đổi chính đáp án của mAP.</li>
 <li><i>Nhầm lẫn:</i> mỗi đa giác nhãn được gán lớp dự đoán phủ ≥ 30% diện tích; không có thì tính “bỏ sót”.</li>
-<li><i>Khối lượng:</i> MAE (g), sai số % trung vị, sai số tổng khay. Chọn phương pháp bằng kiểm định chéo bỏ-một-nhóm (CV) trên train + val ([[fit_trays]] khay); test chỉ chấm một lần. Món bị bỏ sót không tính vào MAE món nhưng tính 0 g vào tổng khay.</li>
+<li><i>Khối lượng:</i> MAE (g), sai số % trung vị, sai số tổng khay. Chọn phương pháp bằng kiểm định chéo bỏ-một-nhóm (CV) trên train + val ([[fit_trays]] khay); test chỉ chấm một lần. Món bị bỏ sót không tính vào MAE món nhưng tính 0 g vào tổng khay. Bảng V chỉ cộng các món có cân; Bảng VI cộng <i>mọi</i> món ứng dụng báo ra, kể cả món “ma” (không có trên khay) — đúng con số người dùng thấy, nên hai bảng khác nhau ở cột tổng khay.</li>
 </ul>
 
 <h3>E. Ước lượng khối lượng</h3>
 <p class="ni">Diện tích món <i>A</i> = diện tích mask / diện tích đĩa; đĩa lấy từ YOLOE [3] (prompt “plate”), chọn đĩa chứa nhiều món dự đoán nhất, fit elip khi đĩa bị khung cắt. Với món khác cơm:</p>
 <div class="eq">log g = a<sub>món</sub> + b · log A,</div>
 <p class="ni">với <i>b</i> dùng chung, lớp có &lt; 3 khay dùng hệ số chung, và hiệu chỉnh smearing của Duan [6] khi đổi về thang gram. Với cơm, Depth-Anything-V2 Large [2] cho bản đồ disparity; fit mặt phẳng bền vững (lọc MAD lặp) trên phần mặt đĩa lộ ra, độ cao <i>h</i> = disparity − mặt phẳng, chuẩn hóa theo độ trải p95−p5 trong vùng đĩa; thể tích tương đối <i>V</i> = Σ max(<i>h</i>, 0) / diện tích đĩa (Hình 1).</p>
+
+<h3>F. Phân loại lại bằng DINOv2</h3>
+<p class="ni">Sau khi đã chốt model, nhóm thử các cải tiến <i>không</i> huấn luyện lại YOLO, chọn mọi tham số trên val (3 model chỉ-train). Cách giữ lại: lấy cả mask có độ tin cậy ≥ 0.1; mỗi vùng được cắt vuông quanh mask, đưa qua DINOv2-base [7] (224 px), lấy trung bình các token nằm trong mask rồi phân loại bằng hồi quy logistic học trên đa giác nhãn của train + val. Xác suất DINOv2 và YOLO được kết hợp theo trọng số 0.8/0.2 trên thang log; hai mask trùng (IoU ≥ 0.7) giữ mask điểm cao hơn; mask yếu (&lt; 0.25) chỉ giữ khi xác suất kết hợp ≥ 0.5. Món có xác suất &lt; 0.75 được đánh dấu để người dùng xác nhận.</p>
 
 <figure><img src="fig_depth.jpg" alt="Ảnh khay và bản đồ độ cao">
 <figcaption>Hình 1. Ảnh khay (trái) và bản đồ độ cao so với mặt đĩa từ Depth-Anything-V2 Large (phải; sáng = cao). Đống cơm nổi rõ dù diện tích nhìn thấy bị món khác che.</figcaption></figure>
@@ -106,16 +110,28 @@ ul.c li { margin: 0 0 1pt; }
 <h3>D. Độ sâu cho cơm</h3>
 <p class="ni">Tính theo khay ([[gn]] khay, mask nhãn tay), tương quan Spearman giữa gram cơm và diện tích là [[gA|+.2f]], với thể tích từ model Small là [[gS|+.2f]] và Large là [[gL|+.2f]]. Với mask dự đoán: diện tích [[spA|+.2f]], thể tích [[spV|+.2f]]. Diện tích tương quan <i>âm</i> vì cơm càng nhiều càng bị món khác đè lên. Khi đưa vào hệ thống, độ sâu <b>không</b> cải thiện MAE cơm từng đĩa trên CV ([[c1|.1f]] so với [[c2|.1f]] g) nhưng giảm sai số tổng khay ở cả CV ([[kc1|.0f]] → [[kc2|.0f]] g; trung vị [[kp1|.1f]]% → [[kp2|.1f]]%) và test ([[k1|.0f]] → [[k2|.0f]] g). Chỉ kết luận ở mức tổng khay — con số ứng dụng hiển thị.</p>
 
+<h3>E. Cải tiến sau huấn luyện</h3>
+<p class="ni">Bảng VI chạy đúng pipeline của ứng dụng trên test. Trên val, phân loại lại tăng vùng nhận đúng trung bình 3 seed từ [[v_y|.1f]] lên [[v_d|.1f]]; trên test từ [[t_y|.1f]] lên [[t_d|.1f]], và cả 3 seed cùng tăng ([[seeds]]). Bỏ sót giảm từ [[d_s0|.0f]] xuống [[d_s1|.0f]] vùng, F1 danh sách món từ [[d_f0|.1f]]% lên [[d_f1|.1f]]%, số món sai mà không được hỏi lại giảm từ [[d_l0|.0f]] xuống [[d_l1|.0f]] (đổi lại [[d_q1|.0f]]% món được hỏi, thay vì [[d_q0|.0f]]%). Sai số calo tổng khay giảm khoảng 9% ([[d_k0|.0f]] → [[d_k1|.0f]] kcal; bật độ sâu [[d_kd0|.0f]] → [[d_kd1|.0f]]), còn sai số <i>gram</i> gần như không đổi ([[d_g0|.0f]] → [[d_g1|.0f]] g; bật độ sâu [[d_gd0|.0f]] → [[d_gd1|.0f]]). Calo tốt lên vì món được gọi đúng tên, tức đúng hệ số kcal/100 g.</p>
+
+<div class="tab"><div class="cap"><span class="no">Bảng VI</span>Pipeline ứng dụng trên test: chỉ YOLO và thêm DINOv2 (model cuối)</div>[[T6]]
+<div class="tn">Chấm qua pipeline ứng dụng (mask đổi thành đa giác rút gọn) nên số vùng đúng thấp hơn Bảng IV vài vùng. Khối lượng: 30 ảnh test có cân; tổng khay cộng mọi món báo ra, kể cả món “ma”.</div></div>
+
+<p class="ni">Bảng VII liệt kê các hướng đã thử nhưng không giữ lại. Đáng chú ý, gộp các món hay nhầm làm tỉ lệ đúng tăng chỉ vì bài toán dễ hơn: pipeline cũ chấm theo cùng nhóm cũng đạt mức đó. Các cặp hay nhầm vốn có calo gần nhau, nên lỗi nhầm còn lại ít ảnh hưởng tới calo.</p>
+
+<div class="tab"><div class="cap"><span class="no">Bảng VII</span>Các hướng đã thử nhưng không giữ lại</div>[[T7]]
+<div class="tn">Chọn cấu hình trên val hoặc CV trước khi xem test. Kcal khay: MAE trung bình 3 seed, có DINOv2, cơm = khẩu phần TB.</div></div>
+
 <h2>IV. Hạn chế</h2>
 <ul class="c">
 <li>Chỉ [[n_trays]] khay có cân, test [[te_trays]] khay: mọi con số khối lượng là ước lượng thô, khoảng tin cậy rộng.</li>
-<li>Lỗi lớn nhất nằm ở bước nhận diện: [[miss_te]]/[[n_te]] món có cân trong test bị bỏ sót, độ sâu không sửa được.</li>
+<li>Lỗi lớn nhất nằm ở bước nhận diện: với YOLO, [[miss_te]]/[[n_te]] món có cân trong test bị bỏ sót; DINOv2 giảm còn [[d_s1|.0f]] vùng sót nhưng chưa loại bỏ được.</li>
+<li>Mức “±30% mỗi món” ứng dụng hiển thị chỉ đúng với [[nr30_cv|.0f]]% món khác cơm trên CV ([[nr30_te|.0f]]% trên test); ±50% phủ [[nr50_cv|.0f]]% / [[nr50_te|.0f]]%.</li>
 <li>Cùng một khay, diện tích món lệch trung bình ~25% giữa các ảnh do che khuất và góc chụp.</li>
 <li>Gram cơm thật suy ra bằng phép trừ nên nhiễu; món đựng trong hộp (không có đĩa) sai số lớn hơn nhiều.</li>
 </ul>
 
 <h2>V. Kết luận</h2>
-<p class="ni">Giao thức gồm chia theo nhóm buổi chụp, test khóa, 3 seed, chỉ số cơm độc lập cách gán nhãn và CV theo nhóm cho khối lượng giúp tách được cải tiến thật khỏi dao động ngẫu nhiên. Tinh chỉnh YOLO26s-seg đạt mask mAP [[full]]; diện tích chuẩn hóa theo đĩa đủ tốt cho món khác cơm, còn cơm cần thông tin 3D — độ sâu đơn ảnh là hướng khả thi không cần phần cứng thêm. Ứng dụng nên cho người dùng xác nhận các món mô hình không chắc chắn.</p>
+<p class="ni">Giao thức gồm chia theo nhóm buổi chụp, test khóa, 3 seed, chỉ số cơm độc lập cách gán nhãn và CV theo nhóm cho khối lượng giúp tách được cải tiến thật khỏi dao động ngẫu nhiên. Tinh chỉnh YOLO26s-seg đạt mask mAP [[full]]; diện tích chuẩn hóa theo đĩa đủ tốt cho món khác cơm, còn cơm cần thông tin 3D — độ sâu đơn ảnh là hướng khả thi không cần phần cứng thêm. Phân loại lại bằng DINOv2 là cải tiến rẻ, không cần huấn luyện lại, cải thiện nhận diện và calo nhưng không cải thiện gram; muốn giảm sai số khối lượng cần thêm khay có cân. Ứng dụng nên cho người dùng xác nhận các món mô hình không chắc chắn, và dùng các xác nhận đó để cập nhật bộ phân loại.</p>
 
 <h2>Tài liệu tham khảo</h2>
 <div class="ref">
@@ -125,6 +141,8 @@ ul.c li { margin: 0 0 1pt; }
 <p>[4] G. Ciocca, P. Napoletano, and R. Schettini, “Food recognition: A new dataset, experiments, and results,” <i>IEEE J. Biomed. Health Inform.</i>, 2017.</p>
 <p>[5] Q. Thames <i>et al.</i>, “Nutrition5k: Towards automatic nutritional understanding of generic food,” in <i>Proc. IEEE/CVF Conf. Computer Vision and Pattern Recognition (CVPR)</i>, 2021.</p>
 <p>[6] N. Duan, “Smearing estimate: A nonparametric retransformation method,” <i>J. Amer. Statist. Assoc.</i>, 1983.</p>
+<p>[7] M. Oquab <i>et al.</i>, “DINOv2: Learning robust visual features without supervision,” <i>Trans. Mach. Learn. Res. (TMLR)</i>, 2024.</p>
+
 </div>
 </div>
 </body></html>

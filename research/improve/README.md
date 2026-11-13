@@ -41,7 +41,7 @@ Tác động xuống gram và kcal, chạy bằng pipeline thật (`eval_pipelin
 | Tỉ lệ món bị gắn cờ | 13.7% | 25.2% | 13.7% | 25.2% |
 
 Tổng khay ở đây cộng mọi món chương trình báo ra (kể cả món ma); món có nhãn nhưng không được cân (cơm của 2 khay test) thì bỏ qua.
-Cách tính cũ trong báo cáo chỉ cộng các món có cân, nên cùng model chỉ-YOLO ra 113 g / 83 g.
+Bảng V của báo cáo chỉ cộng các món có cân, nên cùng model chỉ-YOLO ra 113 g / 83 g; Bảng VI của báo cáo dùng cách tính ở đây.
 
 Chi phí: thêm khoảng 0,2 s mỗi ảnh trên GPU, khoảng 2,5 s trên CPU; tải DINOv2-base 330 MB một lần.
 
