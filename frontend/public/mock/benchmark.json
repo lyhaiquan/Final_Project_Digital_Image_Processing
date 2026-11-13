@@ -1,0 +1,184 @@
+{
+  "source": "README.md mục 6; docs/results/seg_v4_final_per_class_ap_s1.csv",
+  "sample": "36 ảnh kiểm thử · 10 khay có cân",
+  "metrics": [
+    {
+      "label": "Mask mAP50–95",
+      "value": "56,6%",
+      "detail": "± 1,4 điểm % · 3 seed"
+    },
+    {
+      "label": "F1 danh sách món",
+      "value": "84,5%",
+      "detail": "YOLO + DINOv2"
+    },
+    {
+      "label": "Sai số mỗi món",
+      "value": "24,5 g",
+      "detail": "MAE · có độ sâu"
+    },
+    {
+      "label": "Sai số calo / khay",
+      "value": "98 kcal",
+      "detail": "MAE · có độ sâu"
+    }
+  ],
+  "comparisons": [
+    {
+      "label": "F1 danh sách món (%)",
+      "before": 79.5,
+      "after": 84.5,
+      "better": "cao hơn tốt hơn"
+    },
+    {
+      "label": "Vùng món bị bỏ sót",
+      "before": 41,
+      "after": 33,
+      "better": "thấp hơn tốt hơn"
+    },
+    {
+      "label": "Sai số gram / món",
+      "before": 26.8,
+      "after": 26.5,
+      "better": "thấp hơn tốt hơn"
+    },
+    {
+      "label": "Sai số kcal / khay",
+      "before": 122,
+      "after": 111,
+      "better": "thấp hơn tốt hơn"
+    }
+  ],
+  "ap": [
+    {
+      "cls": "rice",
+      "value": 33.4
+    },
+    {
+      "cls": "fried_tofu",
+      "value": 69.2
+    },
+    {
+      "cls": "bell_pepper_chicken",
+      "value": 23.9
+    },
+    {
+      "cls": "boiled_egg",
+      "value": 94.5
+    },
+    {
+      "cls": "coconut_braised_pork",
+      "value": 44.9
+    },
+    {
+      "cls": "pork_broccoli",
+      "value": 45.1
+    },
+    {
+      "cls": "cutlet",
+      "value": 89.9
+    },
+    {
+      "cls": "chayote",
+      "value": 41.0
+    },
+    {
+      "cls": "pork_floss",
+      "value": 44.8
+    },
+    {
+      "cls": "sausage",
+      "value": 97.3
+    },
+    {
+      "cls": "potato",
+      "value": 16.3
+    },
+    {
+      "cls": "boiled_pork",
+      "value": 55.4
+    },
+    {
+      "cls": "radish",
+      "value": 80.4
+    },
+    {
+      "cls": "braised_egg",
+      "value": 97.9
+    },
+    {
+      "cls": "water_spinach",
+      "value": 71.3
+    },
+    {
+      "cls": "shrimp_spring_roll",
+      "value": 76.5
+    },
+    {
+      "cls": "sweet_sour_chicken",
+      "value": 0.0
+    },
+    {
+      "cls": "silkworm_pupae",
+      "value": 49.4
+    },
+    {
+      "cls": "bean_sprouts_green_beans",
+      "value": 76.1
+    },
+    {
+      "cls": "fish_ball",
+      "value": 40.4
+    }
+  ],
+  "confusions": {
+    "bell_pepper_chicken": [
+      "coconut_braised_pork"
+    ],
+    "boiled_egg": [
+      "chayote"
+    ],
+    "braised_egg": [
+      "fish_ball"
+    ],
+    "cabbage": [
+      "chayote"
+    ],
+    "chayote": [
+      "boiled_egg",
+      "cabbage"
+    ],
+    "coconut_braised_pork": [
+      "bell_pepper_chicken"
+    ],
+    "fish_ball": [
+      "braised_egg",
+      "fried_egg",
+      "quail_egg"
+    ],
+    "fried_chicken": [
+      "sweet_sour_chicken"
+    ],
+    "fried_egg": [
+      "fish_ball"
+    ],
+    "fried_tofu": [
+      "roasted_cinnamon_pork"
+    ],
+    "leafy_greens": [
+      "water_spinach"
+    ],
+    "quail_egg": [
+      "fish_ball"
+    ],
+    "roasted_cinnamon_pork": [
+      "fried_tofu"
+    ],
+    "sweet_sour_chicken": [
+      "fried_chicken"
+    ],
+    "water_spinach": [
+      "leafy_greens"
+    ]
+  }
+}

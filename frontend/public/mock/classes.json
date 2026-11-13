@@ -1,0 +1,440 @@
+[
+  {
+    "cls": "rice",
+    "name": "cơm trắng",
+    "kcal_per_100g": 130.0,
+    "default_g": 228,
+    "suggestions": [],
+    "source": "Nutrition5k ingredients_metadata (USDA FNDDS)",
+    "note": ""
+  },
+  {
+    "cls": "fried_tofu",
+    "name": "đậu phụ rán",
+    "kcal_per_100g": 73.0,
+    "default_g": 46,
+    "suggestions": [
+      "roasted_cinnamon_pork"
+    ],
+    "source": "Nutrition5k ingredients_metadata (USDA FNDDS)",
+    "note": "đậu chưa rán"
+  },
+  {
+    "cls": "betel_leaf_pork",
+    "name": "chả lá lốt",
+    "kcal_per_100g": 286.0,
+    "default_g": 25,
+    "suggestions": [],
+    "source": "Nutrition5k ingredients_metadata (USDA FNDDS)",
+    "note": "thịt viên"
+  },
+  {
+    "cls": "bean_sprouts_bamboo",
+    "name": "giá xào măng",
+    "kcal_per_100g": 30.0,
+    "default_g": 65,
+    "suggestions": [],
+    "source": "Nutrition5k ingredients_metadata (USDA FNDDS)",
+    "note": ""
+  },
+  {
+    "cls": "minced_pork_corn",
+    "name": "thịt băm xào ngô",
+    "kcal_per_100g": 115.0,
+    "default_g": 53,
+    "suggestions": [],
+    "source": "https://mytour.vn/vi/blog/bai-viet/5-mon-ngon-tu-thit-bam-khien-ban-an-tro-nen-soi-dong.html",
+    "note": "công thức không ghi lượng dầu -> chưa tính dầu, thấp hơn thực tế"
+  },
+  {
+    "cls": "bell_pepper_chicken",
+    "name": "gà xào ớt chuông",
+    "kcal_per_100g": 165.0,
+    "default_g": 76,
+    "suggestions": [
+      "coconut_braised_pork"
+    ],
+    "source": "Nutrition5k ingredients_metadata (USDA FNDDS)",
+    "note": "chỉ phần gà"
+  },
+  {
+    "cls": "rolled_omelette",
+    "name": "trứng cuộn",
+    "kcal_per_100g": 154.0,
+    "default_g": 35,
+    "suggestions": [],
+    "source": "Nutrition5k ingredients_metadata (USDA FNDDS)",
+    "note": ""
+  },
+  {
+    "cls": "pumpkin",
+    "name": "bí đỏ",
+    "kcal_per_100g": 25.9,
+    "default_g": 80,
+    "suggestions": [],
+    "source": "Nutrition5k ingredients_metadata (USDA FNDDS)",
+    "note": ""
+  },
+  {
+    "cls": "boiled_egg",
+    "name": "trứng luộc",
+    "kcal_per_100g": 155.5,
+    "default_g": 58,
+    "suggestions": [
+      "chayote"
+    ],
+    "source": "Nutrition5k ingredients_metadata (USDA FNDDS)",
+    "note": ""
+  },
+  {
+    "cls": "drink",
+    "name": "đồ uống",
+    "kcal_per_100g": 0.0,
+    "default_g": 50,
+    "suggestions": [],
+    "source": "",
+    "note": "không tính calo đồ uống (nhóm quyết định 09/11)"
+  },
+  {
+    "cls": "coconut_braised_pork",
+    "name": "thịt kho (nước dừa)",
+    "kcal_per_100g": 238.0,
+    "default_g": 45,
+    "suggestions": [
+      "bell_pepper_chicken"
+    ],
+    "source": "Nutrition5k ingredients_metadata (USDA FNDDS)",
+    "note": "chưa tính đường, nước kho"
+  },
+  {
+    "cls": "chinese_sausage",
+    "name": "lạp xưởng",
+    "kcal_per_100g": 344.6,
+    "default_g": 50,
+    "suggestions": [],
+    "source": "Nutrition5k ingredients_metadata (USDA FNDDS)",
+    "note": "xúc xích kiểu Mỹ"
+  },
+  {
+    "cls": "fried_chicken",
+    "name": "gà rán",
+    "kcal_per_100g": 246.1,
+    "default_g": 61,
+    "suggestions": [
+      "sweet_sour_chicken"
+    ],
+    "source": "Nutrition5k ingredients_metadata (USDA FNDDS)",
+    "note": ""
+  },
+  {
+    "cls": "leafy_greens",
+    "name": "rau xanh",
+    "kcal_per_100g": 28.0,
+    "default_g": 60,
+    "suggestions": [
+      "water_spinach"
+    ],
+    "source": "Nutrition5k ingredients_metadata (USDA FNDDS)",
+    "note": ""
+  },
+  {
+    "cls": "pork_broccoli",
+    "name": "thịt xào súp lơ",
+    "kcal_per_100g": 35.0,
+    "default_g": 92,
+    "suggestions": [],
+    "source": "Nutrition5k ingredients_metadata (USDA FNDDS)",
+    "note": "chỉ phần súp lơ"
+  },
+  {
+    "cls": "cutlet",
+    "name": "thịt lợn chiên",
+    "kcal_per_100g": 230.8,
+    "default_g": 36,
+    "suggestions": [],
+    "source": "Nutrition5k ingredients_metadata (USDA FNDDS)",
+    "note": ""
+  },
+  {
+    "cls": "chayote",
+    "name": "su su",
+    "kcal_per_100g": 24.0,
+    "default_g": 50,
+    "suggestions": [
+      "boiled_egg",
+      "cabbage"
+    ],
+    "source": "Nutrition5k ingredients_metadata (USDA FNDDS)",
+    "note": ""
+  },
+  {
+    "cls": "pork_floss",
+    "name": "ruốc / chà bông",
+    "kcal_per_100g": 369.0,
+    "default_g": 50,
+    "suggestions": [],
+    "source": "https://nhathuoclongchau.com.vn/bai-viet/cha-bong-bao-nhieu-calo-an-nhu-the-nao-de-khong-lo-tang-can.html",
+    "note": ""
+  },
+  {
+    "cls": "quail_egg",
+    "name": "trứng cút",
+    "kcal_per_100g": 155.5,
+    "default_g": 31,
+    "suggestions": [
+      "fish_ball"
+    ],
+    "source": "Nutrition5k ingredients_metadata (USDA FNDDS)",
+    "note": "trứng gà"
+  },
+  {
+    "cls": "egg_meatloaf",
+    "name": "chả trứng",
+    "kcal_per_100g": 212.0,
+    "default_g": 50,
+    "suggestions": [],
+    "source": "https://quantrimang.com/cuoc-song/cach-lam-cha-trung-hap-cuc-ngon-ma-de-lam-183312",
+    "note": "mộc nhĩ, miến tính theo khối lượng khô; chỉ tính trứng + thịt thì ra 203"
+  },
+  {
+    "cls": "sausage",
+    "name": "xúc xích",
+    "kcal_per_100g": 344.6,
+    "default_g": 36,
+    "suggestions": [],
+    "source": "Nutrition5k ingredients_metadata (USDA FNDDS)",
+    "note": ""
+  },
+  {
+    "cls": "potato",
+    "name": "khoai tây",
+    "kcal_per_100g": 77.0,
+    "default_g": 81,
+    "suggestions": [],
+    "source": "Nutrition5k ingredients_metadata (USDA FNDDS)",
+    "note": "luộc; xào/chiên sẽ cao hơn"
+  },
+  {
+    "cls": "soup",
+    "name": "canh",
+    "kcal_per_100g": 35.5,
+    "default_g": 50,
+    "suggestions": [],
+    "source": "Nutrition5k ingredients_metadata (USDA FNDDS)",
+    "note": "dao động lớn theo loại canh"
+  },
+  {
+    "cls": "boiled_pork",
+    "name": "thịt luộc",
+    "kcal_per_100g": 238.0,
+    "default_g": 34,
+    "suggestions": [],
+    "source": "Nutrition5k ingredients_metadata (USDA FNDDS)",
+    "note": ""
+  },
+  {
+    "cls": "radish",
+    "name": "củ cải",
+    "kcal_per_100g": 16.0,
+    "default_g": 50,
+    "suggestions": [],
+    "source": "Nutrition5k ingredients_metadata (USDA FNDDS)",
+    "note": ""
+  },
+  {
+    "cls": "braised_egg",
+    "name": "trứng kho",
+    "kcal_per_100g": 155.5,
+    "default_g": 50,
+    "suggestions": [
+      "fish_ball"
+    ],
+    "source": "Nutrition5k ingredients_metadata (USDA FNDDS)",
+    "note": "chưa tính nước kho"
+  },
+  {
+    "cls": "water_spinach",
+    "name": "rau muống",
+    "kcal_per_100g": 23.0,
+    "default_g": 65,
+    "suggestions": [
+      "leafy_greens"
+    ],
+    "source": "Nutrition5k ingredients_metadata (USDA FNDDS)",
+    "note": "rau khác loài"
+  },
+  {
+    "cls": "braised_fish",
+    "name": "cá kho",
+    "kcal_per_100g": 90.0,
+    "default_g": 50,
+    "suggestions": [],
+    "source": "Nutrition5k ingredients_metadata (USDA FNDDS)",
+    "note": "chưa tính đường, dầu"
+  },
+  {
+    "cls": "pork_roll",
+    "name": "giò lụa",
+    "kcal_per_100g": 145.0,
+    "default_g": 50,
+    "suggestions": [],
+    "source": "Nutrition5k ingredients_metadata (USDA FNDDS)",
+    "note": ""
+  },
+  {
+    "cls": "shrimp_spring_roll",
+    "name": "nem / chả giò tôm",
+    "kcal_per_100g": 154.3,
+    "default_g": 33,
+    "suggestions": [],
+    "source": "Nutrition5k ingredients_metadata (USDA FNDDS)",
+    "note": ""
+  },
+  {
+    "cls": "fried_egg",
+    "name": "trứng rán",
+    "kcal_per_100g": 196.0,
+    "default_g": 26,
+    "suggestions": [
+      "fish_ball"
+    ],
+    "source": "Nutrition5k ingredients_metadata (USDA FNDDS)",
+    "note": ""
+  },
+  {
+    "cls": "sweet_sour_chicken",
+    "name": "gà sốt chua ngọt",
+    "kcal_per_100g": 250.0,
+    "default_g": 47,
+    "suggestions": [
+      "fried_chicken"
+    ],
+    "source": "https://foodstruct.com/food/restaurant-chinese-sweetandsourchicken",
+    "note": "gà chua ngọt nhà hàng Trung Quốc (USDA); bản siêu thị Anh 124"
+  },
+  {
+    "cls": "dog_meat_rua_man",
+    "name": "rựa mận / giả cầy",
+    "kcal_per_100g": 193.1,
+    "default_g": 50,
+    "suggestions": [],
+    "source": "https://hoanghamobile.com/tin-tuc/?p=469545",
+    "note": "coi như giữ hết dầu, không bay hơi; giò heo tính cả xương"
+  },
+  {
+    "cls": "pork_with_tofu",
+    "name": "đậu sốt thịt",
+    "kcal_per_100g": 153.7,
+    "default_g": 39,
+    "suggestions": [],
+    "source": "https://www.dienmayxanh.com/vao-bep/cach-lam-dau-hu-sot-thit-bam-thom-ngon-dam-da-hap-dan-dua-com-10049",
+    "note": "công thức dùng đậu non; căng tin dùng đậu RÁN -> thay đậu rán (270, fdc 172451) thì ra ~258"
+  },
+  {
+    "cls": "silkworm_pupae",
+    "name": "nhộng",
+    "kcal_per_100g": 206.0,
+    "default_g": 13,
+    "suggestions": [],
+    "source": "https://tienphong.vn/cong-dung-va-tac-hai-cua-nhong-tam-ban-can-biet-de-tranh-post803987.tpo",
+    "note": ""
+  },
+  {
+    "cls": "stir_fried_vegetables",
+    "name": "rau xào thập cẩm",
+    "kcal_per_100g": 32.0,
+    "default_g": 50,
+    "suggestions": [],
+    "source": "Nutrition5k ingredients_metadata (USDA FNDDS)",
+    "note": "chưa tính dầu"
+  },
+  {
+    "cls": "fried_anchovy",
+    "name": "cá cơm rim",
+    "kcal_per_100g": 210.0,
+    "default_g": 38,
+    "suggestions": [],
+    "source": "Nutrition5k ingredients_metadata (USDA FNDDS)",
+    "note": ""
+  },
+  {
+    "cls": "peanuts",
+    "name": "lạc",
+    "kcal_per_100g": 567.5,
+    "default_g": 50,
+    "suggestions": [],
+    "source": "Nutrition5k ingredients_metadata (USDA FNDDS)",
+    "note": ""
+  },
+  {
+    "cls": "fried_shrimp",
+    "name": "tôm chiên",
+    "kcal_per_100g": 99.0,
+    "default_g": 16,
+    "suggestions": [],
+    "source": "Nutrition5k ingredients_metadata (USDA FNDDS)",
+    "note": "tôm chưa chiên"
+  },
+  {
+    "cls": "bean_sprouts_green_beans",
+    "name": "giá xào đậu que",
+    "kcal_per_100g": 31.0,
+    "default_g": 49,
+    "suggestions": [],
+    "source": "Nutrition5k ingredients_metadata (USDA FNDDS)",
+    "note": ""
+  },
+  {
+    "cls": "cabbage",
+    "name": "bắp cải luộc",
+    "kcal_per_100g": 21.0,
+    "default_g": 52,
+    "suggestions": [
+      "chayote"
+    ],
+    "source": "Nutrition5k ingredients_metadata (USDA FNDDS)",
+    "note": ""
+  },
+  {
+    "cls": "fried_pork_skin",
+    "name": "bì lợn chiên",
+    "kcal_per_100g": 544.0,
+    "default_g": 26,
+    "suggestions": [],
+    "source": "USDA FoodData Central fdcId 167961 (Snacks, pork skins, plain)",
+    "note": "bì chiên giòn dạng snack (rất khô); miếng ở căng tin dày, còn nước -> thực tế có thể thấp hơn"
+  },
+  {
+    "cls": "fish_ball",
+    "name": "cá viên",
+    "kcal_per_100g": 140.0,
+    "default_g": 27,
+    "suggestions": [
+      "braised_egg",
+      "fried_egg",
+      "quail_egg"
+    ],
+    "source": "https://nhathuoclongchau.com.vn/bai-viet/100g-ca-vien-chien-bao-nhieu-calo-71051.html",
+    "note": "chiên; luộc 123"
+  },
+  {
+    "cls": "stir_fried_gizzard",
+    "name": "mề xào",
+    "kcal_per_100g": 135.0,
+    "default_g": 77,
+    "suggestions": [],
+    "source": "https://nhathuoclongchau.com.vn/bai-viet/me-ga-bao-nhieu-calo-an-me-ga-co-tang-can-khong.html",
+    "note": "bài ghi 120-150, lấy giữa khoảng; mề sống 94"
+  },
+  {
+    "cls": "roasted_cinnamon_pork",
+    "name": "chả quế",
+    "kcal_per_100g": 235.0,
+    "default_g": 26,
+    "suggestions": [
+      "fried_tofu"
+    ],
+    "source": "https://nhathuoclongchau.com.vn/bai-viet/cha-que-bao-nhieu-calo-mot-so-goi-y-han-che-tang-can-khi-an-cha-que.html",
+    "note": "nguồn khác ghi 386 cho chả quế chiên (mytour.vn)"
+  }
+]

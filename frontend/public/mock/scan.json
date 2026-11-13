@@ -1,0 +1,353 @@
+{
+  "scan_id": "demo-b212",
+  "image": {
+    "w": 960,
+    "h": 1280
+  },
+  "plate_found": true,
+  "plate_px": 566895,
+  "rice_volume": null,
+  "items": [
+    {
+      "id": 1,
+      "cls": "rice",
+      "name": "cơm trắng",
+      "conf": 0.91,
+      "needs_confirm": false,
+      "suggestions": [],
+      "area_px": 0,
+      "area_ratio": 0.12,
+      "grams": 228,
+      "gram_method": "rice_mean",
+      "kcal": 296,
+      "polygons": [
+        [
+          [
+            275,
+            170
+          ],
+          [
+            490,
+            135
+          ],
+          [
+            730,
+            320
+          ],
+          [
+            725,
+            550
+          ],
+          [
+            610,
+            770
+          ],
+          [
+            420,
+            775
+          ],
+          [
+            270,
+            690
+          ],
+          [
+            360,
+            510
+          ]
+        ]
+      ],
+      "source": "model"
+    },
+    {
+      "id": 2,
+      "cls": "potato",
+      "name": "khoai tây",
+      "conf": 0.97,
+      "needs_confirm": false,
+      "suggestions": [],
+      "area_px": 0,
+      "area_ratio": 0.12,
+      "grams": 84,
+      "gram_method": "area",
+      "kcal": 65,
+      "polygons": [
+        [
+          [
+            475,
+            100
+          ],
+          [
+            600,
+            135
+          ],
+          [
+            695,
+            275
+          ],
+          [
+            692,
+            440
+          ],
+          [
+            675,
+            590
+          ],
+          [
+            617,
+            588
+          ],
+          [
+            580,
+            530
+          ],
+          [
+            475,
+            548
+          ],
+          [
+            440,
+            410
+          ],
+          [
+            455,
+            275
+          ]
+        ]
+      ],
+      "source": "model"
+    },
+    {
+      "id": 3,
+      "cls": "pork_broccoli",
+      "name": "thịt xào súp lơ",
+      "conf": 0.68,
+      "needs_confirm": true,
+      "suggestions": [],
+      "area_px": 0,
+      "area_ratio": 0.12,
+      "grams": 91,
+      "gram_method": "area",
+      "kcal": 32,
+      "polygons": [
+        [
+          [
+            180,
+            260
+          ],
+          [
+            315,
+            270
+          ],
+          [
+            372,
+            355
+          ],
+          [
+            388,
+            540
+          ],
+          [
+            455,
+            660
+          ],
+          [
+            365,
+            746
+          ],
+          [
+            220,
+            715
+          ],
+          [
+            120,
+            620
+          ],
+          [
+            140,
+            360
+          ]
+        ]
+      ],
+      "source": "model"
+    },
+    {
+      "id": 4,
+      "cls": "fried_tofu",
+      "name": "đậu phụ rán",
+      "conf": 0.89,
+      "needs_confirm": false,
+      "suggestions": [
+        "roasted_cinnamon_pork"
+      ],
+      "area_px": 0,
+      "area_ratio": 0.12,
+      "grams": 46,
+      "gram_method": "area",
+      "kcal": 34,
+      "polygons": [
+        [
+          [
+            722,
+            353
+          ],
+          [
+            866,
+            377
+          ],
+          [
+            881,
+            431
+          ],
+          [
+            800,
+            493
+          ],
+          [
+            840,
+            518
+          ],
+          [
+            827,
+            597
+          ],
+          [
+            712,
+            621
+          ],
+          [
+            683,
+            539
+          ],
+          [
+            694,
+            437
+          ]
+        ]
+      ],
+      "source": "model"
+    },
+    {
+      "id": 5,
+      "cls": "boiled_egg",
+      "name": "trứng luộc",
+      "conf": 0.94,
+      "needs_confirm": false,
+      "suggestions": [
+        "chayote"
+      ],
+      "area_px": 0,
+      "area_ratio": 0.12,
+      "grams": 58,
+      "gram_method": "area",
+      "kcal": 90,
+      "polygons": [
+        [
+          [
+            305,
+            158
+          ],
+          [
+            365,
+            114
+          ],
+          [
+            429,
+            118
+          ],
+          [
+            467,
+            166
+          ],
+          [
+            470,
+            230
+          ],
+          [
+            422,
+            282
+          ],
+          [
+            351,
+            285
+          ],
+          [
+            300,
+            237
+          ]
+        ]
+      ],
+      "source": "model"
+    },
+    {
+      "id": 6,
+      "cls": "fish_ball",
+      "name": "cá viên",
+      "conf": 0.61,
+      "needs_confirm": true,
+      "suggestions": [
+        "braised_egg",
+        "fried_egg",
+        "quail_egg"
+      ],
+      "area_px": 0,
+      "area_ratio": 0.12,
+      "grams": 55,
+      "gram_method": "area",
+      "kcal": 77,
+      "polygons": [
+        [
+          [
+            558,
+            609
+          ],
+          [
+            665,
+            588
+          ],
+          [
+            706,
+            615
+          ],
+          [
+            698,
+            653
+          ],
+          [
+            621,
+            680
+          ],
+          [
+            625,
+            736
+          ],
+          [
+            580,
+            768
+          ],
+          [
+            496,
+            738
+          ],
+          [
+            480,
+            692
+          ],
+          [
+            533,
+            656
+          ]
+        ]
+      ],
+      "source": "model"
+    }
+  ],
+  "total": {
+    "grams": 562,
+    "kcal": 594,
+    "error_pct": 30,
+    "daily_pct": 30
+  },
+  "warnings": [],
+  "model_version": "demo",
+  "timing_ms": 850
+}

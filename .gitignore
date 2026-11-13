@@ -19,3 +19,16 @@ yoloe-11*.pt
 .idea/
 .DS_Store
 Thumbs.db
+
+# backend
+.env
+data/
+
+# frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.local
+
+# bản sao lưu đầu DINOv2 do tools/update_dino_head.py tạo
+models/dino_head_backup/
