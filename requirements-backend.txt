@@ -12,6 +12,7 @@ opencv-python-headless>=4.9
 numpy
 pandas
 tzdata                # múi giờ Asia/Ho_Chi_Minh trên Windows
+scikit-learn>=1.4     # tools/update_dino_head.py (cập nhật đầu DINOv2 từ ảnh góp)
 # test
 pytest>=8
 httpx>=0.27

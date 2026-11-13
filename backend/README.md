@@ -78,6 +78,14 @@ kcal luôn do backend tính lại (`gram đã làm tròn × kcal/100 g ÷ 100`, 
 - **Thay model / bảng calo:** thay file trong `models/` rồi khởi động lại (đổi `calories.csv` → `/classes` và kcal đổi theo).
 - **Xuất ảnh người ăn đã góp** (định dạng YOLO-seg): `python -m backend.export_corrections out/corrections`
   → `images/`, `labels/`, `missing.csv` (món thêm tay cần khoanh), `data.yaml`.
+- **Cập nhật đầu phân loại DINOv2 từ ảnh góp** (không train lại YOLO, vài phút):
+  ```bash
+  python tools/update_dino_head.py            # chạy thử: in độ chính xác đầu cũ / đầu mới trên phần ảnh góp để riêng
+  python tools/update_dino_head.py --apply    # qua chốt chặn thì ghi đè models/dino_head.npz (tự sao lưu bản cũ)
+  ```
+  Chỉ học từ vùng người ăn đã xác nhận hoặc sửa tên; bỏ món thêm tay và món chưa xác nhận. Cần ít nhất 20 vùng / 4 ảnh góp.
+  Muốn rà nhãn bằng tay trước: xuất bằng `backend.export_corrections`, sửa file trong `labels/`, rồi chạy với `--labels <thư mục>`.
+  Ghi xong phải khởi động lại backend. Bản cũ nằm ở `models/dino_head_backup/` (kèm `history.jsonl`).
 - Log mỗi lần quét: số món, cảnh báo, thời gian từng bước, `model_version`; không log ảnh.
 
 ## 6. Cấu trúc
