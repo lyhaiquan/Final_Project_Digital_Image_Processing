@@ -143,17 +143,23 @@ async function chooseFile(chosen) {
   try {const prepared=await prepareImage(chosen);releaseImage();imageUrl=prepared.url;file=prepared.file;sample=false;result=null;saved=false;removed=null;storeDraft();render();}
   catch(error){toast(error.message);}
 }
+function revealResults() {
+  const panel=document.querySelector('.results-column');
+  if(!panel||panel.getBoundingClientRect().top<innerHeight*0.6)return; // màn hình rộng: kết quả đã nằm cạnh ảnh
+  panel.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth',block:'start'});
+}
 async function analyze() {
   if(busy||editing||!imageUrl)return;
+  let done=false;
   busy=true;controller=new AbortController();render();
   try {
     if(sample&&!file) {const response=await fetch('/mock/sample.jpg');file=new File([await response.blob()],'sample.jpg',{type:'image/jpeg'});}
     const next=await api.scan(file,{depth,signal:controller.signal});
     if(controller.signal.aborted)return;
-    result=next;saved=false;removed=null;selectedId=null;storeDraft();
+    result=next;saved=false;removed=null;selectedId=null;storeDraft();done=true;
     toast(isMock?'Đã tải kết quả mẫu.':'Phân tích hoàn tất.');
   }catch(error){if(error.name!=='AbortError')toast(error.message);}
-  finally{busy=false;render();}
+  finally{busy=false;render();if(done)revealResults();}
 }
 async function submitModal(event) {
   event.preventDefault(); const form=event.currentTarget, submit=form.querySelector('[type="submit"]');submit.disabled=true;
@@ -203,9 +209,10 @@ function bind() {
   app.querySelectorAll('[data-delete-meal]').forEach(button=>button.onclick=()=>openModal('Xóa bữa ăn này?',`<form><p>Bữa ăn sẽ bị xóa khỏi nhật ký. Thao tác này không thể hoàn tác.</p><p class="form-error" role="alert"></p><button class="danger" type="submit">Xóa bữa ăn</button></form>`,'delete',button.dataset.deleteMeal));
 }
 async function loadPage() {
-  const version=++navigationVersion;
+  const version=++navigationVersion, previous=page;
   page=['scan','diary','foods','benchmark'].includes(location.hash.slice(1))?location.hash.slice(1):'scan';
   pageError='';render();
+  if(previous!==page)window.scrollTo(0,0); // trang mới luôn mở từ đầu, không giữ vị trí cuộn của trang trước
   try{
     if(!foods.length){const data=await api.classes();foods=Array.isArray(data)?data:data.classes;}
     if(page==='diary'){const data=await api.meals(diaryDate);if(version!==navigationVersion)return;diary=data;}
